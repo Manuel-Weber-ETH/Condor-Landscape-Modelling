@@ -1,0 +1,112 @@
+---
+title: "Landscape Modelling Project - Condors - Main Script"
+author: "Justine DeGroote, Tanja Falasca, Manuel Weber"
+date: '2023-03-31'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Landscape Modelling Project - Condors
+
+## Main Script
+
+##### Students: Justine DeGroote, Tanja Falasca, Manuel Weber
+
+##### Supervisor: Monika K. Goralczyk
+
+![Andean Condor (Pixabay)](condor.jpg)
+
+## Organization
+
+Weekly meetings on Tuesdays at 4:15 PM on the green floor in CHN or in F77 (no meeting on the 11th of April).
+
+Summarize and email questions to Monika before the meetings.
+
+| Date        | Progress Milestone                                                                          | Suggested Focus                                                     |
+|------------------|-------------------------------|-----------------------|
+| 03.04-07.04 | Species occurrence data downloaded and cleaned                                              | Data retrieval and cleaning                                         |
+| 10.04-14.05 | Environmental data prepared for model fitting                                               | Environmental exploration                                           |
+| 17.04-21.04 | 1.Initial set of predictors selected 2.Created 1st set of PAs (e.g.: random)                | Environmental predictors ; Pseudoabsence creation (PAs)             |
+| 24.04-28.04 | Buffered, target-group, environmentally stratified PAs                                      | Pseudoabsence creation (PAs)                                        |
+| 01.05-05.05 | Models fitted and evaluated (at least 2 algorithms)                                         | Model fitting & evaluation                                          |
+| 08.05-12.05 | Evidence of exploring different model parameters, selected ones with best fit and accuracy. | Generated predictor response curves Model fitting & model selection |
+| 15.05-19.05 | Creation of ranges (polygons for mammals)                                                   | Alternative approach to SDM                                         |
+| 22.05-26.05 | Overlap of distributions and protected areas                                                | Implications for conservation                                       |
+| 29.05       | Presentation                                                                                |                                                                     |
+
+: Preliminary schedule
+
+## Week 1: Species Occurrence Data Download and Cleaning
+
+Examine records from GBIF, remove erroneous entries and ones without geolocation, and duplicate records. Remove low-quality records (e.g.: based on spatial and temporal accuracy) and outliers (compare with range maps).
+
+If there is time, familiarize yourself with environmental data (crop to the study extent, broadly), download bioclimatic data from Chelsea ([https://chelsa-climate.org/bioclim/),](https://chelsa-climate.org/bioclim/),) explore additional data (topography, rivers and lakes shapefiles (these will need to be rasterized and distance calculated), land cover, degree of openness etc.)
+
+```{r}
+# Load the rgbif R package
+library(rgbif)
+
+# Download occurrences for the condor
+gbi_vg <- occ_search(scientificName = "Vultur gryphus", 
+                     #country = "", 
+                     hasCoordinate = TRUE, # Only observations with coordinates
+                     eventDate = "1980,2023", # Observations between 1980 and 2023
+                     hasGeospatialIssue = FALSE, # No geospatial issues 
+                     limit = 10000) # Maxiumum number of records
+
+# Extract essential columns
+gbi_vg_crd <- gbi_vg$data[,c("decimalLongitude", "decimalLatitude", 
+                             "coordinateUncertaintyInMeters", "occurrenceStatus")]
+gbi_vg_crd$occurrenceStatus <- as.factor(gbi_vg_crd$occurrenceStatus)
+
+# Inspect output
+dim(gbi_vg_crd)
+summary(gbi_vg_crd)
+
+??vect
+
+# Create SpatVector
+ve_vg = vect(gbi_vg_ss,geom=c("decimalLongitude","decimalLatitude"),
+             crs="+init=epsg:4326")
+
+library(terra) # Problem with installation
+## Get shapefile of Switzerland
+shape_ch <- vect(x = "input/Shapefile_CH/ch.sp.shp")
+
+# Plot the data
+par(mfrow = c(1,2))
+plot(shape_ch, main = expression(paste(italic('Vultur gryphus'))), 
+     axes = FALSE, mar = c(.5,.5,1,.5))
+points(ve_vg, col = '#004D4050', pch = 16, cex = .8)
+```
+
+#### SDM resources
+
+Zurell, D. et al. (2020) "A standard protocol for reporting species distribution models," Ecography, 43(9), pp. 1261--1277. Available at: <https://doi.org/10.1111/ecog.04960>
+
+ENM2020 course (table 1 contains description of tutorials) <https://journals.ku.edu/jbi/article/view/15016/15152>
+
+For cleaning occurrence data (from the ENM 2020 course)
+
+-   'Tools for biodiversity data cleaning' -- R packages for data cleaning
+
+-   'Occurrence data cleaning I (simple consistency checks)' -- main manual checks
+
+Some information about habitat and diet of the 3 focal species <https://avianreport.com/andean-condor-range-and-habitat/> <https://nationalzoo.si.edu/animals/andean-bear#:~:text=Andean%20bears%20live%20in%20a,forest%20to%20thorny%20dry%20forest.> <https://animalia.bio/south-american-cougar>
+
+Area-conservative projection: Albers equal area conic projection (epsg.io)
+
+Mask water bodies
+
+Maybe limit scope to northern south America
+
+Splitting data into months, fitting months separately (is one habitat more important for nesting?)
+
+Environmental or spatial stratification of pseudo-absences
+
+We start with random pseudo-absences
+
+test
