@@ -109,4 +109,4 @@ Environmental or spatial stratification of pseudo-absences
 
 We start with random pseudo-absences
 
-test
+testJ
