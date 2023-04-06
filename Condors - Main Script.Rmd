@@ -50,15 +50,35 @@ If there is time, familiarize yourself with environmental data (crop to the stud
 library(rgbif)
 
 # Download occurrences for the three species
-species <- c("Vultur gryphus", "Puma concolor", "Tremarctos ornatus")
-for(i in 1:length(species)){
-  paste0("gbi_", species[i]) <- occ_search(scientificName = species[i], 
+## Vultur gryphus
+gbi_vg <- occ_search(scientificName = "Vultur gryphus", 
                      continent = "south_america", 
                      hasCoordinate = TRUE, # Only observations with coordinates
-                     eventDate = "1980,2023", # Observations between 1980 and 2023
+                     eventDate = "2000,2023", # Observations between 1980 and 2023
                      hasGeospatialIssue = FALSE, # No geospatial issues 
                      limit = 100000) # Maxiumum number of records
-}
+
+write.csv(gbi_vg$data, "gbi_vg.csv")
+
+## Puma concolor
+gbi_pc <- occ_search(scientificName = "Puma concolor", 
+                     continent = "south_america", 
+                     hasCoordinate = TRUE, # Only observations with coordinates
+                     eventDate = "2000,2023", # Observations between 1980 and 2023
+                     hasGeospatialIssue = FALSE, # No geospatial issues 
+                     limit = 100000) # Maxiumum number of records
+
+write.csv(gbi_pc$data, "gbi_pc.csv")
+
+## Tremarctos ornatus
+gbi_to <- occ_search(scientificName = "Tremarctos ornatus", 
+                     continent = "south_america", 
+                     hasCoordinate = TRUE, # Only observations with coordinates
+                     eventDate = "2000,2023", # Observations between 1980 and 2023
+                     hasGeospatialIssue = FALSE, # No geospatial issues 
+                     limit = 100000) # Maxiumum number of records
+
+write.csv(gbi_to$data, "gbi_to.csv")
 
 # I will run the code above now and send you the files, so don't run it (Manuel 6/4; 13:22)
 

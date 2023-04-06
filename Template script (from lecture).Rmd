@@ -6,15 +6,18 @@ output:
   html_document: default
 subtitle: Practical in Landscape Modelling
 ---
+
 ---
 editor_options: 
   markdown: 
     wrap: 72
 ---
+
 # Introduction
+
 In this chapter, you will learn the basis of model fitting. In addition, you will focus on two aspects of model fitting, model complexity and data quality. The chapter is structured in three parts:
 
-**Part 1: The basis of model fitting** In the first part of the chapter, you will continue where you ended in the first practical and fit generalized linear models (GLMs) and random forest (RF) models to the data in our model matrix. You will walk trough the main steps of model fitting and inspection, focusing on the nutcracker (*Nucifraga caryocatactes*). 
+**Part 1: The basis of model fitting** In the first part of the chapter, you will continue where you ended in the first practical and fit generalized linear models (GLMs) and random forest (RF) models to the data in our model matrix. You will walk trough the main steps of model fitting and inspection, focusing on the nutcracker (*Nucifraga caryocatactes*).
 
 **Part 2: Considering model complexity** In the second part, You will explore how different model parameterizations (e.g., types of polynomial relationships included) affect model complexity.
 
@@ -25,6 +28,7 @@ In this chapter, you will learn the basis of model fitting. In addition, you wil
 ### Load data
 
 You start by loading a shape file of the study area (Switzerland), so that you have a clearer idea of where in Switzerland our data are.
+
 ```{r}
 suppressPackageStartupMessages(library(terra))
 ## Get shapefile of Switzerland
@@ -40,6 +44,7 @@ summary(model_matrix)
 ```
 
 Check the number of presences and absences for each species:
+
 ```{r}
 table(model_matrix$kingfisher)
 ```
@@ -75,9 +80,10 @@ legend('bottomright', legend = c('Presence', 'Absence'),
        col = c('#004D40', '#D81B60'), 
        pch = 16, bty = 'n', pt.cex = 1.2)
 ```
+
 The figure above shows the distribution of presence and absence observations for the two bird species. The color palette used, and other palettes that can be distinguished by color-blind readers, can be found [here](https://davidmathlogic.com/colorblind/#%23D81B60-%231E88E5-%23FFC107-%23004D40).
 
-You can see the differences between the two bird species regarding location and number of presences, which can be linked to their ecology. For the kingfisher (*Alcedo atthis*) you only have eight presence observations. These are too few to be used for species distribution modelling. You typically expect at least ten presence observations per environmental predictor for modelling. Moreover, it is good practice to avoid fitting species distribution models to data sets with less than 30 presence observations. In the third part of this chapter, you will learn how observations for the kingfisher can be compiled from a large biodiversity database. Until then, you will focus on the distribution of the nutcracker. 
+You can see the differences between the two bird species regarding location and number of presences, which can be linked to their ecology. For the kingfisher (*Alcedo atthis*) you only have eight presence observations. These are too few to be used for species distribution modelling. You typically expect at least ten presence observations per environmental predictor for modelling. Moreover, it is good practice to avoid fitting species distribution models to data sets with less than 30 presence observations. In the third part of this chapter, you will learn how observations for the kingfisher can be compiled from a large biodiversity database. Until then, you will focus on the distribution of the nutcracker.
 
 In order to reconsider which predictors are available, you also load the environmental layers that you created in the last practical and plot them, using a color blind-save palette from the `viridisLite` package:
 
@@ -133,9 +139,11 @@ for(i in 1:(ncol(vls)-1)){
 }
 par(xpd = NA)
 ```
-As you can see from the plot, you have a few problematic pairs of predictors. Temperature and elevation are strongly correlated with $r = -1$ and canopy height and inner forest density are strongly correlated with $r = 0.94$. Moreover, there are a few pairs with moderately high correlations that are just above the typically used threshold of $|r| < 0.7$. These include NDVI and canopy height ($r = 0.7$), solar radiation and elevation ($r = -0.71$), and solar radiation and temperature ($r = 0.72$). In order to get rid of this collinearity, you have to remove variables from the highly correlated pairs, and one criterion to decide which variables to remove is explanatory power: among the pairs of predictors with $|r| < 0.7$, you  would want to select the one with higher explanatory power.
+
+As you can see from the plot, you have a few problematic pairs of predictors. Temperature and elevation are strongly correlated with $r = -1$ and canopy height and inner forest density are strongly correlated with $r = 0.94$. Moreover, there are a few pairs with moderately high correlations that are just above the typically used threshold of $|r| < 0.7$. These include NDVI and canopy height ($r = 0.7$), solar radiation and elevation ($r = -0.71$), and solar radiation and temperature ($r = 0.72$). In order to get rid of this collinearity, you have to remove variables from the highly correlated pairs, and one criterion to decide which variables to remove is explanatory power: among the pairs of predictors with $|r| < 0.7$, you would want to select the one with higher explanatory power.
 
 #### Explanatory power of predictors
+
 In the next step, you therefore want to assess the explanatory power of each predictor variable individually. To do so, you fit a univariate GLM (with a linear and a quadratic term). A common measure to asses explanatory power of GLMs is adjusted explained deviance ($D^2_{adj}$), which will be discussed in more depth in the next practical. $D^2_{adj}$ can be calculated with the 'ecospat.adj.D2.glm' function from the R package `ecospat`. If you fit univariate models, $D^2_{adj}$ gives you the fraction of deviance that can be explained by an individual variable. With a for loop, you can loop over all variables, fit models, and calculate $D^2_{adj}$ for each of them. Multiplying the output by 100 gives us the explained deviance in percent.
 
 ```{r, eval=T, warning=F}
@@ -156,7 +164,7 @@ for(i in 6:ncol(model_matrix)){
 round(sort(d2adj, decreasing = TRUE), digits = 2)
 ```
 
-You can now use explanatory power and pairwise correlation coefficients to decide which variables to use as predictors for the two bird species. But never trust these statistics blindly! A decision for a set of predictors should always also include ecological reasoning. You would, for example,  never favor the elevation variable 'dem' over temperature ('temp_avg'), even if it had higher $D^2_{adj}$. Here, you select the following explanatory variables for modelling: 
+You can now use explanatory power and pairwise correlation coefficients to decide which variables to use as predictors for the two bird species. But never trust these statistics blindly! A decision for a set of predictors should always also include ecological reasoning. You would, for example, never favor the elevation variable 'dem' over temperature ('temp_avg'), even if it had higher $D^2_{adj}$. Here, you select the following explanatory variables for modelling:
 
     -   temp_avg
     -   slope
@@ -176,6 +184,7 @@ Next, you will fit a generalized linear model (GLM) to model bird species' habit
 #### Model fitting
 
 To model the habitat suitability of *Nucifraga caryocatactes*, let's start with the full model containing second-degree polynomials of all selected predictors:
+
 ```{r, warning = F}
 # Define formula
 form_base <- nutcracker ~ temp_avg + I(temp_avg^2) + slope + I(slope^2) + 
@@ -187,6 +196,7 @@ form_base <- nutcracker ~ temp_avg + I(temp_avg^2) + slope + I(slope^2) +
 glm_nc_full <- glm(form_base, data = model_matrix, family = 'binomial')
 summary(glm_nc_full)
 ```
+
 As you can see from the model summary, many coefficients (parameters) in the model are not significant. You can apply a stepwise variable selection procedure to remove predictor variables that do not contribute much to explaining the distribution of the nutcracker. The 'step' function iteratively fits updated models by dropping and adding coefficients from/to the model equation and comparing whether these changes optimize the Akaike Information Criterion (AIC, see next practical). It identifies the model configuration for which no update with a lower AIC can be found.
 
 ```{r, eval=T, warning=FALSE}
@@ -194,19 +204,22 @@ As you can see from the model summary, many coefficients (parameters) in the mod
 glm_nc_step <- step(glm_nc_full, directions = 'both', trace = 0)
 summary(glm_nc_step)
 ```
+
 Nice, this looks more compact. Note that some predictors which were insignificant in the full model now became significant, after other insignificant predictors were dropped. Let's check what the effect of this stepwise reduction is on $D^2_{adj}$.
 
 ```{r}
 ecospat.adj.D2.glm(glm_nc_full)
 ecospat.adj.D2.glm(glm_nc_step)
 ```
+
 Almost no effect. $D^2_{adj}$ even slightly increased for the simpler model, meaning that hardly any explanatory power was lost by simplifying the model. Note that explained deviance itself can never get lower when more coefficients are added to the model equation. So the adjustment term in $D^2_{adj}$, which penalizes for the number of coefficients considered by the model (see next practical), was responsible for the lower score in the full model.
 
 #### Response curves
 
-To better understand the relationships fitted by the model, you can visualize how the response (the probability of occurrence) varies along the environmental gradients. You can do that by plotting the probability of occurrence of a species across the range of observed conditions of an environmental variable. Such visualizations are called response curves or partial plots. To generate response curves from univariate models you simply need to generate a sequence of predictor values across a relevant range and make a model prediction for each point in the sequence. When generating response curves from multivariate models, you also need to define a constant value for the variables considered by the model but not plotted. We typically define these constant values by means or medians across the study area. 
+To better understand the relationships fitted by the model, you can visualize how the response (the probability of occurrence) varies along the environmental gradients. You can do that by plotting the probability of occurrence of a species across the range of observed conditions of an environmental variable. Such visualizations are called response curves or partial plots. To generate response curves from univariate models you simply need to generate a sequence of predictor values across a relevant range and make a model prediction for each point in the sequence. When generating response curves from multivariate models, you also need to define a constant value for the variables considered by the model but not plotted. We typically define these constant values by means or medians across the study area.
 
 First, you identify the ranges and medians of the variables observed in Switzerland:
+
 ```{r}
 env_ch <- values(environmental_predictors)
 
@@ -216,6 +229,7 @@ round(env_stats, digits = 2)
 ```
 
 Next, you loop over the predictors considred, create the data.frame for prediction, predict, and plot the response curves.
+
 ```{r, fig.width = 12, fig.height = 12}
 # First, you identify the predictors in the step GLM
 all_preds <- colnames(vls) # Get all names from the vls table created above
@@ -267,11 +281,14 @@ for(i in used_preds){
   box()
 }
 ```
+
 Interesting, so the nutcracker seems to prefer steep slopes, annual mean temperatures between around 0$^\circ$C and 5$^\circ$C (which is about in the center of the range observed across Switzerland). Moreover, according to the GLM the species is more likely to be found under dry conditions and it prefers regions with intermediate to high average NDVI, but a low standard deviation of NDVI. It also has a preference for forests with a 25th percentile of LiDAR returns at 10 meters and it is more probable to occur in regions with not too many buildings. Note also the polygons on the response curves. For GLMs they represent the standard errors of the predictions that can directly be taken from output of the 'predict' function. Finally, the short black lines (or I's) at occurrence probabilities of zero and one represent the observational data.
 
 ### Random forest (RF)
+
 #### Model fitting
-In the next step, you will build a RF model to model the distribution of the nutcracker. To do so, you will use the `ranger` package, which allows a fast implementation of random forest models. Here, you will fit a random forest model with default parameters. 
+
+In the next step, you will build a RF model to model the distribution of the nutcracker. To do so, you will use the `ranger` package, which allows a fast implementation of random forest models. Here, you will fit a random forest model with default parameters.
 
 ```{r, warning = F}
 library(ranger)
@@ -284,7 +301,7 @@ rf_nc <- ranger(form_rf, data = model_matrix, num.trees = 500, probability = TRU
 rf_nc
 ```
 
-Looks fine. For random forest models, there is no equivalent way of simplifying the model as you had before. You therefore directly move on to inspect the response curves of the random forest model. 
+Looks fine. For random forest models, there is no equivalent way of simplifying the model as you had before. You therefore directly move on to inspect the response curves of the random forest model.
 
 #### Response curves
 
@@ -340,7 +357,7 @@ for(i in used_preds){
 }
 ```
 
-Interesting, so the relationships are much less smooth than the response curves you got from the GLM. This is not surprising, as the trees fitted in a random forest can only make hard decisions (zero or one) for a given set of environmental values (i.e., they are classification trees). The response curves here look at the predictions on the population level (the forest). So, if you have an occurrence probability of 0.5 for a given set of conditions it means that 250 trees predicted absence and 250 trees predicted presence. The response curves are particularly different from those obtained with the GLM under rarely observed conditions. For example, under very cold conditions random forests predict a constant, intermediate occurrence probability while according to GLMs occurrence probability decreases steeply. This is because the models show differing extrapolation behaviors at training range edges and beyond. RF stabilizes at some expected value while GLM follows the function that fitted best to the data. These extrapolation behaviors will have strong impacts on future projections as you will see in practical 4. Another thing to be aware of is that random forest models fit high-level interactions between predictors. So, unlike for the GLM, the response shapes would look different if the constant variables would not be held at their median but, for example, at their mean. Finally, note that in the code above, you used a bootstrapping approach to generate empirical confidence intervals for the predictions. Unlike the 'glm' function, the 'ranger' function does not offer standard errors for probability trees (only for regression trees). 
+Interesting, so the relationships are much less smooth than the response curves you got from the GLM. This is not surprising, as the trees fitted in a random forest can only make hard decisions (zero or one) for a given set of environmental values (i.e., they are classification trees). The response curves here look at the predictions on the population level (the forest). So, if you have an occurrence probability of 0.5 for a given set of conditions it means that 250 trees predicted absence and 250 trees predicted presence. The response curves are particularly different from those obtained with the GLM under rarely observed conditions. For example, under very cold conditions random forests predict a constant, intermediate occurrence probability while according to GLMs occurrence probability decreases steeply. This is because the models show differing extrapolation behaviors at training range edges and beyond. RF stabilizes at some expected value while GLM follows the function that fitted best to the data. These extrapolation behaviors will have strong impacts on future projections as you will see in practical 4. Another thing to be aware of is that random forest models fit high-level interactions between predictors. So, unlike for the GLM, the response shapes would look different if the constant variables would not be held at their median but, for example, at their mean. Finally, note that in the code above, you used a bootstrapping approach to generate empirical confidence intervals for the predictions. Unlike the 'glm' function, the 'ranger' function does not offer standard errors for probability trees (only for regression trees).
 
 Now that you have seen the basics of model fitting, let's have a look at how model complexity can be varied.
 
@@ -352,9 +369,9 @@ Model complexity is a key aspect of statistical analyses, especially when the ma
 
 ## Why is important?
 
-Model complexity is important because it determines how close the relationships identified by the model are allowed to fit to the data. Overall, a model should not be too simple because it would not be capable of capturing the underlying processes that generate an observed pattern. On the other hand, a model should not be too complex as it would require too much data to estimate the parameters with sufficient accuracy, and thus the model overfits to the training data set. In other words, not only the signal in the data is modeled but also the noise. You will learn more about identifying the optimal level of model complexity in the next practical on model performance. 
+Model complexity is important because it determines how close the relationships identified by the model are allowed to fit to the data. Overall, a model should not be too simple because it would not be capable of capturing the underlying processes that generate an observed pattern. On the other hand, a model should not be too complex as it would require too much data to estimate the parameters with sufficient accuracy, and thus the model overfits to the training data set. In other words, not only the signal in the data is modeled but also the noise. You will learn more about identifying the optimal level of model complexity in the next practical on model performance.
 
-## Fitting models with different levels of complexity 
+## Fitting models with different levels of complexity
 
 You will now add a second level of complexity to both the GLM and the random forest algorithms.
 
@@ -453,15 +470,15 @@ Contrary to the GLM, the default implementation of random forests leads to rathe
 
 ## Overview
 
-Let's now return to the questions of what alternative data sources exist that may offer sufficient observations to model the kingfisher too, and how opportunistic presence-only data affect the model fitting procedure. 
+Let's now return to the questions of what alternative data sources exist that may offer sufficient observations to model the kingfisher too, and how opportunistic presence-only data affect the model fitting procedure.
 
 ## Types of biodiversity data for species distribution models
 
 Species distribution models, and other spatial biodiversity models (e.g., modelling community-level features such as taxonomic, functional and phylogenetic diversity metrics) require a sufficient number of observations to run. SDMs need both, presences and absences.
 
-__Unbiased high-quality data__: Spatially unbiased, high-quality data is provided, for example, by the Biodiversity Monitoring program (BDM), which has been introduced in previous chapter. High-quality data are typically based on community plots, where experts report all present members of a taxon at a given site. This means that both presences and absences can be derived (i.e., a species not listed in a community plot can be assumed to be absent with sufficient confidence). Besides BDM, other data from intense and long-term monitoring are available, for example, urban biodiversity monitoring in Zurich ([Casanelles-Abella et al., 2021]), and the Butterfly Monitoring Scheme. However, keep in mind that rare species may hardly be observed in such monitoring schemes, as you have seen for the kingfisher (*Alcedo atthis*) in the previous parts of the chapter. For such species, alternative data sources may be necessary to be able to fit robust models.
+**Unbiased high-quality data**: Spatially unbiased, high-quality data is provided, for example, by the Biodiversity Monitoring program (BDM), which has been introduced in previous chapter. High-quality data are typically based on community plots, where experts report all present members of a taxon at a given site. This means that both presences and absences can be derived (i.e., a species not listed in a community plot can be assumed to be absent with sufficient confidence). Besides BDM, other data from intense and long-term monitoring are available, for example, urban biodiversity monitoring in Zurich ([Casanelles-Abella et al., 2021]), and the Butterfly Monitoring Scheme. However, keep in mind that rare species may hardly be observed in such monitoring schemes, as you have seen for the kingfisher (*Alcedo atthis*) in the previous parts of the chapter. For such species, alternative data sources may be necessary to be able to fit robust models.
 
-__Heterogeneous data__: It is often the case that researchers use opportunistic and heterogeneous observations (e.g., museum specimens, collections, citizen science data, automated observations), which are much more ubiquitous than community plots. This is accentuated depending on, e.g., the geographic area studied or the taxonomic group of interest. While historically decentralized and difficult to gather, the use of heterogeneous data has been boosted by big online repositories such as the Global Biodiversity Information Facility (GBIF). Moreover, numbers of observations gathered by citizen scientists via mobile phone apps are increasing exponentially. In Switzerland, for example, a major citizen science platform is maintained National Data and Information Center on the Swiss Flora ([Info Flora](https://www.infoflora.ch/en/)). However, heterogeneous data often lack the completeness of community plots, and confirmed absences are often not available. Moreover, the occurrences might have significant sampling bias (e.g., information might be missing for some areas, whereas others might be over-represented, especially if they are easily accessible). Thus, when researchers rely on this type of data, they have to apply methods for generating "fake" absences, commonly known as pseudo-absences, to be able to fit SDMs, and they have to correct for strong spatial biases.
+**Heterogeneous data**: It is often the case that researchers use opportunistic and heterogeneous observations (e.g., museum specimens, collections, citizen science data, automated observations), which are much more ubiquitous than community plots. This is accentuated depending on, e.g., the geographic area studied or the taxonomic group of interest. While historically decentralized and difficult to gather, the use of heterogeneous data has been boosted by big online repositories such as the Global Biodiversity Information Facility (GBIF). Moreover, numbers of observations gathered by citizen scientists via mobile phone apps are increasing exponentially. In Switzerland, for example, a major citizen science platform is maintained National Data and Information Center on the Swiss Flora ([Info Flora](https://www.infoflora.ch/en/)). However, heterogeneous data often lack the completeness of community plots, and confirmed absences are often not available. Moreover, the occurrences might have significant sampling bias (e.g., information might be missing for some areas, whereas others might be over-represented, especially if they are easily accessible). Thus, when researchers rely on this type of data, they have to apply methods for generating "fake" absences, commonly known as pseudo-absences, to be able to fit SDMs, and they have to correct for strong spatial biases.
 
 In the final part of this chapter, you will learn (1) how to download opportunistic occurrence data diretcly from the GBIF repository and how to conduct a spatial thinning, and (2) how to sample pseudo-absences using different strategies.
 
@@ -528,11 +545,12 @@ dim(gbi_nc_crd)
 summary(gbi_nc_crd)
 ```
 
-It takes a moment to download all observations but then you have gathered a lot of information. The objects 'gbi_aa' and 'gbi_nc' contain hundreds of columns of meta data with detailed information about taxonomy, data source etc. which may be quite relevant depending on the question. Here, you only focus on four columns: longitude (decimalLongitude), latitude (decimalLatitude), coordinate uncertainty (coordinateUncertaintyInMeters), and whether the species was present (occurrenceStatus). You can see that you have `r nrow(gbi_aa_crd)` observations for the kingfisher and `r nrow(gbi_nc_crd)` observations for the nutcracker, which is orders of magnitude more than what you had in the BDM data. However, you can also see that some observations have coordinate uncertainties of more than 30 km, and, more critically, you do not know about the coordinate precision in the majority of cases (see number of NAs). 
+It takes a moment to download all observations but then you have gathered a lot of information. The objects 'gbi_aa' and 'gbi_nc' contain hundreds of columns of meta data with detailed information about taxonomy, data source etc. which may be quite relevant depending on the question. Here, you only focus on four columns: longitude (decimalLongitude), latitude (decimalLatitude), coordinate uncertainty (coordinateUncertaintyInMeters), and whether the species was present (occurrenceStatus). You can see that you have `r nrow(gbi_aa_crd)` observations for the kingfisher and `r nrow(gbi_nc_crd)` observations for the nutcracker, which is orders of magnitude more than what you had in the BDM data. However, you can also see that some observations have coordinate uncertainties of more than 30 km, and, more critically, you do not know about the coordinate precision in the majority of cases (see number of NAs).
 
 In general, you would like to keep coordinate uncertainty at a maximum of 1000 m , which corresponds to the resolution of our raster layers. With this uncertainty it is still possible that observations may actually stem from the neighboring pixels instead of the one considered, but given their mobility the birds are likely also not stuck to the same pixel for all their lives. The problem is, that you do not have information on a coordinate precision for a large fraction of the observations.
 
 Let's see what the known fraction of observations above the 1000 m threshold is and what the fraction of observations without coordinate precision is.
+
 ```{r, warning = F}
 # Fraction of imprecise observations
 tb_aa <- table(gbi_aa_crd$coordinateUncertaintyInMeters<=1000)
@@ -557,6 +575,7 @@ gbi_nc_ss = gbi_nc_crd[-which(gbi_nc_crd$coordinateUncertaintyInMeters>1000),]
 nrow(gbi_aa_ss)
 nrow(gbi_nc_ss)
 ```
+
 You still have well over 4000 observations for both species. Next, you want to plot the observations in order to get an understanding of where they are located. For this, you best first transform the coordinates from the WGS84 projection (longitude/latitude) reported by GBIF to the Swiss coordinate system.
 
 ```{r, warning = F}
@@ -572,6 +591,7 @@ ch_nc = project(ve_nc,y="+init=epsg:21781")
 ```
 
 Now, you can plot.
+
 ```{r, fig.width = 12, fig.height = 5, eval=T}
 ## Plot the data
 par(mfrow = c(1,2))
@@ -603,6 +623,7 @@ hist(sam_int_nc, breaks = 100, xlab = "counts",
 hist(sam_int_aa, breaks = 100, main = expression(paste(italic('Alcedo atthis'))), 
      xlab = "counts")
 ```
+
 You can see that you have a considerable amount of overlap in the observations, especially for the kingfisher. In one pixel, the species was observed over 600 times! This contrasts with the pattern in the BDM data, where you never had two observations in the same pixel. This imbalance in number of observations per pixel is called spatial bias, and it is problematic because SDM algorithms cannot disentangle the environmental preference of the species from the spatial (and thus environmental) preference of observers. A common way of coping with spatial bias is thinning presence observations. This can be done, for example, by allowing no more than one observation per pixel. Here, you perform a spatial thinning by subsetting for raster cells with one or more observations, and taking their coordinates. As a result, you only retain one observation per cell for cells in which multiple observations fell.
 
 ```{r, eval=T}
@@ -630,15 +651,16 @@ df_pres_aa <- na.omit(df_pres_aa)
 df_pres_nc <- na.omit(df_pres_nc)
 ```
 
-Now that you have the opportunistic presence-only data ready, you need to create pseudo-absences. 
+Now that you have the opportunistic presence-only data ready, you need to create pseudo-absences.
 
 ## Pseudo-absences
 
-The majority of SDM algorithms require information on both, species presences and absences. When working with presence-only data, a common work-around that allows still using presence/absence SDMs is sampling pseudo-absences. In the literature many ways have been suggested to sample pseudo-absences, building on various assumptions. For a thorough exploration of the effects of different pseudo-absence sampling strategies on Swiss plants, consider for example Descombes et al. (2022). Here, you explore three strategies of sampling pseudo-absences. The first and simplest strategy is a spatially random sampling. Sampling pseudo-absences spatially random assumes that there is little spatial bias in the presence observations and that the environmental gradients in the study area can be well represented with a set of typically 10'000 pseudo-absences. The second strategy is sampling pseudo-absences with environmental stratification. This strategy assumes that there are steep gradients in the data with some rare conditions (e.g., high mountain peaks with low temperatures) that should be sufficiently well sampled with pseudo-absences. The environmentally stratified strategy would, for example, increase the number of pseudo-absences under very cold conditions and avoid that the model erroneously predicts suitable habitat under such conditions as a consequence of data scarcity (as you have seen above for the complex GLM of the nutcracker). As a final strategy, geographically-weighted pseudo-absences are sampled under the assumption that presence data contain spatial bias. In order to correct for such bias, this strategy attempts to mirror it in the pseudo-absences. Pseudo-absences are therefore sampled with a higher likelihood in regions close to where presences were observed. 
+The majority of SDM algorithms require information on both, species presences and absences. When working with presence-only data, a common work-around that allows still using presence/absence SDMs is sampling pseudo-absences. In the literature many ways have been suggested to sample pseudo-absences, building on various assumptions. For a thorough exploration of the effects of different pseudo-absence sampling strategies on Swiss plants, consider for example Descombes et al. (2022). Here, you explore three strategies of sampling pseudo-absences. The first and simplest strategy is a spatially random sampling. Sampling pseudo-absences spatially random assumes that there is little spatial bias in the presence observations and that the environmental gradients in the study area can be well represented with a set of typically 10'000 pseudo-absences. The second strategy is sampling pseudo-absences with environmental stratification. This strategy assumes that there are steep gradients in the data with some rare conditions (e.g., high mountain peaks with low temperatures) that should be sufficiently well sampled with pseudo-absences. The environmentally stratified strategy would, for example, increase the number of pseudo-absences under very cold conditions and avoid that the model erroneously predicts suitable habitat under such conditions as a consequence of data scarcity (as you have seen above for the complex GLM of the nutcracker). As a final strategy, geographically-weighted pseudo-absences are sampled under the assumption that presence data contain spatial bias. In order to correct for such bias, this strategy attempts to mirror it in the pseudo-absences. Pseudo-absences are therefore sampled with a higher likelihood in regions close to where presences were observed.
 
-### Sampling pseudo-absences randomly 
+### Sampling pseudo-absences randomly
 
 Pseudoabsences can be sampled randomly with the function 'spatSample' from the `terra` package.
+
 ```{r, eval=T, warning =F}
 # Sample randomly (here we take a bit more than 10'000 to be able to remove presence
 # coordinates later, see below)
@@ -652,7 +674,8 @@ rnd$Presence <- 0
 ```
 
 ### Sampling pseudo-absences environmentally stratified
-In order to sample pseudo-absences environmentally stratified, you first need to define the environmental dimensions over which you want to stratify. Here, you consider the three climate dimensions temperature, precipitation, and solar radiation. This is because you will project the models into the future, under climate change. In order to limit extrapolations beyond training range it is important that the current climatic gradients are covered as well as possible.  
+
+In order to sample pseudo-absences environmentally stratified, you first need to define the environmental dimensions over which you want to stratify. Here, you consider the three climate dimensions temperature, precipitation, and solar radiation. This is because you will project the models into the future, under climate change. In order to limit extrapolations beyond training range it is important that the current climatic gradients are covered as well as possible.
 
 ```{r, eval=T}
 # Define selected predictors
@@ -722,9 +745,11 @@ enstra$Presence <- 0
 ```
 
 ### Sampling pseudo-absences with geographic weighting
+
 Finally, you sample pseudo-absences with the geographically-weighted approach. This needs to be done for the kingfisher and the nutcracker individually, as the result is specific to the distribution of the species of interest.
 
 For the geographically-weighted approach, you use the 'geoIDW' function from the R package `dismo`. Let's first have a look at what this function does.
+
 ```{r, fig.width = 12, fig.height = 5, eval=T, warning=F}
 # Load dismo package
 suppressPackageStartupMessages(library(dismo))
@@ -763,7 +788,7 @@ points(reg_sam_aa[,c("x", "y")], col = "grey", pch = 16, cex = .5)
 points(crd_aa_thin[,c("x", "y")])
 ```
 
-As you can see, the the function generates a probability surface with high probabilities around presence observations, and low probabilities elsewhere. What you can also see is that the method is sensitive to where you place the 'absences' for the inverse distance-weighted interpolation. You therefore repeat the exercise 10 times and slightly move the absence points with the 'jitter' function each time, before you sample pixels with probabilities corresponding to the resulting surface.   
+As you can see, the the function generates a probability surface with high probabilities around presence observations, and low probabilities elsewhere. What you can also see is that the method is sensitive to where you place the 'absences' for the inverse distance-weighted interpolation. You therefore repeat the exercise 10 times and slightly move the absence points with the 'jitter' function each time, before you sample pixels with probabilities corresponding to the resulting surface.
 
 ```{r, eval=T}
 # Define lists to store replicates of idw predictons
@@ -816,6 +841,7 @@ geo_nc <- na.omit(geo_nc)
 geo_aa$Presence <- 0
 geo_nc$Presence <- 0
 ```
+
 OK, so you have now generated four sets of pseudo-absences. Two of them are independent of the species presences, i.e., the set of spatially random pseudo-absences and the set of environmentally stratified pseudo-absences. The other two sets are specific to the nutcracker and the kingfisher, respectively, and based on the geographically-weighted approach. Let's compare them on the map.
 
 ```{r, fig.width = 12, fig.height = 10, eval=T}
@@ -841,11 +867,12 @@ plot(shape_ch, main = "Geographic kingfisher", axes = F,  mar = c(.5,.5,1,.5))
 points(geo_aa[,c("x","y")],
        col = '#D81B6050', pch = 16, cex = .8)
 ```
+
 As you can see, the patterns look quite different depending on the strategy. Note that in practice we often also use combinations of pseudo-absence sampling approaches. For example 80% geographically-weighted pseudo-absences and 20% environmentally-stratified pseudo-absences. Here, however, you will treat them separately.
 
 ## Fitting presence only models of various complexity
 
-In a final step, you will combine all the steps you did above to fit presence-only models of both species with GLMs and random forest of two complexity levels, and based on the three sets of pseudo-absences. You will use these data in the next practical for model validation. You conduct this last step in a nested loop and store the fitted model objects in a list. 
+In a final step, you will combine all the steps you did above to fit presence-only models of both species with GLMs and random forest of two complexity levels, and based on the three sets of pseudo-absences. You will use these data in the next practical for model validation. You conduct this last step in a nested loop and store the fitted model objects in a list.
 
 One final thing to note is that since you work with cell sizes 1 $km^2$, you do not have too many cells across Switzerland (which covers an area of ca. 42'000 $km^2$). This means that our pseudo-absences include ca. 25% of all cells, and especially for geographically-weighted pseudo-absences, they also include many presence cells, which would cause problems later on. Below, you therefore remove all cells where a species was observed from the pseudo-absences. A little bit of overlap between presences and pseudo-absences would not be a big problem, so if you had e.g., 25 by 25 m cells, this step would not be necessary, but here you need to do it.
 
@@ -934,6 +961,7 @@ for(i in spcs){
 }
 names(modli) <- spcs
 ```
+
 That took a moment, but now you have model fits for all combinations of data and algorithms. You can index lists with the dollar sign. So, if you would like to see a summary of the simple GLM fitted for the nutcracker based on random pseudo-absences, you can do it like that.
 
 ```{r, eval=T, warning =F}
