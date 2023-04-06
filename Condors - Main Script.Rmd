@@ -26,7 +26,7 @@ Weekly meetings on Tuesdays at 4:15 PM on the green floor in CHN or in F77 (no m
 Summarize and email questions to Monika before the meetings.
 
 | Date        | Progress Milestone                                                                          | Suggested Focus                                                     |
-|-------------|---------------------------------------------------------------------------------------------|---------------------------------------------------------------------|
+|-----------------|--------------------------------|-----------------------|
 | 03.04-07.04 | Species occurrence data downloaded and cleaned                                              | Data retrieval and cleaning                                         |
 | 10.04-14.05 | Environmental data prepared for model fitting                                               | Environmental exploration                                           |
 | 17.04-21.04 | 1.Initial set of predictors selected 2.Created 1st set of PAs (e.g.: random)                | Environmental predictors ; Pseudoabsence creation (PAs)             |
@@ -49,26 +49,32 @@ If there is time, familiarize yourself with environmental data (crop to the stud
 # Load the rgbif R package
 library(rgbif)
 
-# Download occurrences for the condor
-gbi_vg <- occ_search(scientificName = "Vultur gryphus", 
-                     #country = "", 
+# Download occurrences for the three species
+species <- c("Vultur gryphus", "Puma concolor", "Tremarctos ornatus")
+for(i in 1:length(species)){
+  paste0("gbi_", species[i]) <- occ_search(scientificName = species[i], 
+                     continent = "south_america", 
                      hasCoordinate = TRUE, # Only observations with coordinates
                      eventDate = "1980,2023", # Observations between 1980 and 2023
                      hasGeospatialIssue = FALSE, # No geospatial issues 
-                     limit = 10000) # Maxiumum number of records
+                     limit = 100000) # Maxiumum number of records
+}
 
-# Extract essential columns
-gbi_vg_crd <- gbi_vg$data[,c("decimalLongitude", "decimalLatitude", 
+# I will run the code above now and send you the files, so don't run it (Manuel 6/4; 13:22)
+
+  # Extract essential columns
+  gbi_vg_crd <- gbi_vg$data[,c("decimalLongitude", "decimalLatitude", 
                              "coordinateUncertaintyInMeters", "occurrenceStatus")]
-gbi_vg_crd$occurrenceStatus <- as.factor(gbi_vg_crd$occurrenceStatus)
+  gbi_vg_crd$occurrenceStatus <- as.factor(gbi_vg_crd$occurrenceStatus)
+
 
 # Inspect output
 dim(gbi_vg_crd)
 summary(gbi_vg_crd)
 
-??vect
 
 # Create SpatVector
+suppressPackageStartupMessages(library(dismo))
 ve_vg = vect(gbi_vg_ss,geom=c("decimalLongitude","decimalLatitude"),
              crs="+init=epsg:4326")
 
