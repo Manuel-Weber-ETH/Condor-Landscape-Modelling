@@ -46,41 +46,42 @@ Examine records from GBIF, remove erroneous entries and ones without geolocation
 If there is time, familiarize yourself with environmental data (crop to the study extent, broadly), download bioclimatic data from Chelsea ([https://chelsa-climate.org/bioclim/),](https://chelsa-climate.org/bioclim/),) explore additional data (topography, rivers and lakes shapefiles (these will need to be rasterized and distance calculated), land cover, degree of openness etc.)
 
 ```{r}
+# Data acquisition
 # Load the rgbif R package
-library(rgbif)
+# library(rgbif)
+# 
+# # Download occurrences for the three species
+# ## Vultur gryphus
+# gbi_vg <- occ_search(scientificName = "Vultur gryphus", 
+#                      continent = "south_america", 
+#                      hasCoordinate = TRUE, # Only observations with coordinates
+#                      eventDate = "2000,2023", # Observations between 1980 and 2023
+#                      hasGeospatialIssue = FALSE, # No geospatial issues 
+#                      limit = 100000) # Maxiumum number of records
+# 
+# write.csv(gbi_vg$data, "gbi_vg.csv")
+# 
+# ## Puma concolor
+# gbi_pc <- occ_search(scientificName = "Puma concolor", 
+#                      continent = "south_america", 
+#                      hasCoordinate = TRUE, # Only observations with coordinates
+#                      eventDate = "2000,2023", # Observations between 1980 and 2023
+#                      hasGeospatialIssue = FALSE, # No geospatial issues 
+#                      limit = 100000) # Maxiumum number of records
+# 
+# write.csv(gbi_pc$data, "gbi_pc.csv")
+# 
+# ## Tremarctos ornatus
+# gbi_to <- occ_search(scientificName = "Tremarctos ornatus", 
+#                      continent = "south_america", 
+#                      hasCoordinate = TRUE, # Only observations with coordinates
+#                      eventDate = "2000,2023", # Observations between 1980 and 2023
+#                      hasGeospatialIssue = FALSE, # No geospatial issues 
+#                      limit = 100000) # Maxiumum number of records
+# 
+# write.csv(gbi_to$data, "gbi_to.csv")
 
-# Download occurrences for the three species
-## Vultur gryphus
-gbi_vg <- occ_search(scientificName = "Vultur gryphus", 
-                     continent = "south_america", 
-                     hasCoordinate = TRUE, # Only observations with coordinates
-                     eventDate = "2000,2023", # Observations between 1980 and 2023
-                     hasGeospatialIssue = FALSE, # No geospatial issues 
-                     limit = 100000) # Maxiumum number of records
-
-write.csv(gbi_vg$data, "gbi_vg.csv")
-
-## Puma concolor
-gbi_pc <- occ_search(scientificName = "Puma concolor", 
-                     continent = "south_america", 
-                     hasCoordinate = TRUE, # Only observations with coordinates
-                     eventDate = "2000,2023", # Observations between 1980 and 2023
-                     hasGeospatialIssue = FALSE, # No geospatial issues 
-                     limit = 100000) # Maxiumum number of records
-
-write.csv(gbi_pc$data, "gbi_pc.csv")
-
-## Tremarctos ornatus
-gbi_to <- occ_search(scientificName = "Tremarctos ornatus", 
-                     continent = "south_america", 
-                     hasCoordinate = TRUE, # Only observations with coordinates
-                     eventDate = "2000,2023", # Observations between 1980 and 2023
-                     hasGeospatialIssue = FALSE, # No geospatial issues 
-                     limit = 100000) # Maxiumum number of records
-
-write.csv(gbi_to$data, "gbi_to.csv")
-
-# I will run the code above now and send you the files, so don't run it (Manuel 6/4; 13:22)
+# The code above has been run, the files are stored in the repository, please don't run again but access the files directly (Manuel 6/4; 13:22)
 
   # Extract essential columns
   gbi_vg_crd <- gbi_vg$data[,c("decimalLongitude", "decimalLatitude", 
