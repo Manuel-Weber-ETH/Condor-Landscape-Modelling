@@ -46,33 +46,73 @@ Examine records from GBIF, remove erroneous entries and ones without geolocation
 If there is time, familiarize yourself with environmental data (crop to the study extent, broadly), download bioclimatic data from Chelsea ([https://chelsa-climate.org/bioclim/),](https://chelsa-climate.org/bioclim/),) explore additional data (topography, rivers and lakes shapefiles (these will need to be rasterized and distance calculated), land cover, degree of openness etc.)
 
 ```{r}
+# Data acquisition
 # Load the rgbif R package
-library(rgbif)
+# library(rgbif)
+# 
+# # Download occurrences for the three species
+# ## Vultur gryphus
+# gbi_vg <- occ_search(scientificName = "Vultur gryphus", 
+#                      continent = "south_america", 
+#                      hasCoordinate = TRUE, # Only observations with coordinates
+#                      eventDate = "2000,2023", # Observations between 1980 and 2023
+#                      hasGeospatialIssue = FALSE, # No geospatial issues 
+#                      limit = 100000) # Maxiumum number of records
+# 
+# write.csv(gbi_vg$data, "gbi_vg.csv")
+# 
+# ## Puma concolor
+# gbi_pc <- occ_search(scientificName = "Puma concolor", 
+#                      continent = "south_america", 
+#                      hasCoordinate = TRUE, # Only observations with coordinates
+#                      eventDate = "2000,2023", # Observations between 1980 and 2023
+#                      hasGeospatialIssue = FALSE, # No geospatial issues 
+#                      limit = 100000) # Maxiumum number of records
+# 
+# write.csv(gbi_pc$data, "gbi_pc.csv")
+# 
+# ## Tremarctos ornatus
+# gbi_to <- occ_search(scientificName = "Tremarctos ornatus", 
+#                      continent = "south_america", 
+#                      hasCoordinate = TRUE, # Only observations with coordinates
+#                      eventDate = "2000,2023", # Observations between 1980 and 2023
+#                      hasGeospatialIssue = FALSE, # No geospatial issues 
+#                      limit = 100000) # Maxiumum number of records
+# 
+# write.csv(gbi_to$data, "gbi_to.csv")
 
-# Download occurrences for the condor
-gbi_vg <- occ_search(scientificName = "Vultur gryphus", 
-                     #country = "", 
-                     hasCoordinate = TRUE, # Only observations with coordinates
-                     eventDate = "1980,2023", # Observations between 1980 and 2023
-                     hasGeospatialIssue = FALSE, # No geospatial issues 
-                     limit = 10000) # Maxiumum number of records
+#######################################################################################
+#The code above has been run, the files are stored in the repository, please don't run again but access the files directly (Manuel 6/4; 13:22)
 
-# Extract essential columns
-gbi_vg_crd <- gbi_vg$data[,c("decimalLongitude", "decimalLatitude", 
+library(terra)
+library(ranger)
+library(ecospat) # Conflict with biomod2, error: "Error: package or namespace load failed for ‘ecospat’: object ‘.transform_model.as.col’ is not exported by 'namespace:biomod2'"
+# I'd be grateful for any way around
+
+# Read in data
+condor <- read.csv("gbi_vg.csv")
+gbi_vg_crd <- condor[,c("decimalLongitude", "decimalLatitude", 
                              "coordinateUncertaintyInMeters", "occurrenceStatus")]
-gbi_vg_crd$occurrenceStatus <- as.factor(gbi_vg_crd$occurrenceStatus)
+
+
+  # Extract essential columns
+  gbi_vg_crd <- gbi_vg$data[,c("decimalLongitude", "decimalLatitude", 
+                             "coordinateUncertaintyInMeters", "occurrenceStatus")]
+  gbi_vg_crd$occurrenceStatus <- as.factor(gbi_vg_crd$occurrenceStatus)
+
 
 # Inspect output
 dim(gbi_vg_crd)
 summary(gbi_vg_crd)
 
-??vect
 
 # Create SpatVector
+suppressPackageStartupMessages(library(dismo))
 ve_vg = vect(gbi_vg_ss,geom=c("decimalLongitude","decimalLatitude"),
              crs="+init=epsg:4326")
 
-library(terra) # Problem with installation
+
+
 ## Get shapefile of Switzerland
 shape_ch <- vect(x = "input/Shapefile_CH/ch.sp.shp")
 
@@ -109,4 +149,4 @@ Environmental or spatial stratification of pseudo-absences
 
 We start with random pseudo-absences
 
-testJ
+test
