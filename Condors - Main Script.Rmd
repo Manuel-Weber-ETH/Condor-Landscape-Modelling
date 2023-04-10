@@ -81,19 +81,28 @@ If there is time, familiarize yourself with environmental data (crop to the stud
 # 
 # write.csv(gbi_to$data, "gbi_to.csv")
 
-#######################################################################################
+############################################################################################
 #The code above has been run, the files are stored in the repository, please don't run again but access the files directly (Manuel 6/4; 13:22)
+############################################################################################
 
 library(terra)
 library(ranger)
 library(ecospat) # Conflict with biomod2, error: "Error: package or namespace load failed for ‘ecospat’: object ‘.transform_model.as.col’ is not exported by 'namespace:biomod2'"
 # I'd be grateful for any way around
 
+library(biomod2)
+
 # Read in data
 condor <- read.csv("gbi_vg.csv")
 gbi_vg_crd <- condor[,c("decimalLongitude", "decimalLatitude", 
                              "coordinateUncertaintyInMeters", "occurrenceStatus")]
 
+
+
+str(condor)
+
+plot(gbi_vg_crd$decimalLatitude ~ gbi_vg_crd$decimalLongitude)
+range(gbi_vg_crd$decimalLongitude)
 
   # Extract essential columns
   gbi_vg_crd <- gbi_vg$data[,c("decimalLongitude", "decimalLatitude", 
@@ -117,10 +126,10 @@ ve_vg = vect(gbi_vg_ss,geom=c("decimalLongitude","decimalLatitude"),
 shape_ch <- vect(x = "input/Shapefile_CH/ch.sp.shp")
 
 # Plot the data
-par(mfrow = c(1,2))
-plot(shape_ch, main = expression(paste(italic('Vultur gryphus'))), 
-     axes = FALSE, mar = c(.5,.5,1,.5))
-points(ve_vg, col = '#004D4050', pch = 16, cex = .8)
+
+
+plot(shape_ch, main = expression(paste(italic('Vultur gryphus'))))
+points(ch_aa, col = '#004D4050', pch = 16, cex = .8)
 ```
 
 #### SDM resources
