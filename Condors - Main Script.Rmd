@@ -85,34 +85,6 @@ If there is time, familiarize yourself with environmental data (crop to the stud
 #The code above has been run, the files are stored in the repository, please don't run again but access the files directly (Manuel 6/4; 13:22)
 ############################################################################################
 
-# Loading packages
-lib_vect <- c("terra", "ranger", "ecospat", "dismo", "rworldmap")
-sapply(lib_vect,require,character.only=TRUE)
-
-# Read in data
-condor <- read.csv("gbi_vg.csv")
-
-# Extract essential columns
-gbi_vg_crd <- condor[,c("decimalLongitude", "decimalLatitude", 
-                             "coordinateUncertaintyInMeters", "occurrenceStatus")]
-gbi_vg_crd$occurrenceStatus <- as.factor(gbi_vg_crd$occurrenceStatus)
-
-
-# Inspect output
-dim(gbi_vg_crd)
-summary(gbi_vg_crd)
-
-
-# Create SpatVector
-ve_vg = vect(gbi_vg_crd,geom=c("decimalLongitude","decimalLatitude"),
-             crs="+init=epsg:4326")
-
-# Plot
-library(rworldmap)
-data(coastsCoarse)
-{plot(ve_vg, main = expression(paste(italic('Vultur gryphus'))), col = '#004D4050', pch = 16, cex = .8)
-plot(coastsCoarse, add = T, col = "grey")}
-
 
 ```
 
@@ -130,6 +102,64 @@ For cleaning occurrence data (from the ENM 2020 course)
 
 Some information about habitat and diet of the 3 focal species <https://avianreport.com/andean-condor-range-and-habitat/> <https://nationalzoo.si.edu/animals/andean-bear#:~:text=Andean%20bears%20live%20in%20a,forest%20to%20thorny%20dry%20forest.> <https://animalia.bio/south-american-cougar>
 
+```{r}
+# Cleaning, projecting and visualizing data
+# Loading packages
+lib_vect <- c("terra", "ranger", "ecospat", "dismo", "rworldmap")
+sapply(lib_vect,require,character.only=TRUE)
+
+# Read in data
+condor <- read.csv("gbi_vg.csv")
+puma <- read.csv("gbi_pc.csv")
+bear <- read.csv("gbi_to.csv")
+
+
+# Extract essential columns
+gbi_vg_crd <- condor[,c("decimalLongitude", "decimalLatitude", 
+                             "coordinateUncertaintyInMeters", "occurrenceStatus")]
+gbi_vg_crd$occurrenceStatus <- as.factor(gbi_vg_crd$occurrenceStatus)
+gbi_pc_crd <- puma[,c("decimalLongitude", "decimalLatitude", 
+                             "coordinateUncertaintyInMeters", "occurrenceStatus")]
+gbi_pc_crd$occurrenceStatus <- as.factor(gbi_pc_crd$occurrenceStatus)
+gbi_to_crd <- bear[,c("decimalLongitude", "decimalLatitude", 
+                             "coordinateUncertaintyInMeters", "occurrenceStatus")]
+gbi_to_crd$occurrenceStatus <- as.factor(gbi_to_crd$occurrenceStatus)
+
+
+# Inspect output
+dim(gbi_vg_crd)
+summary(gbi_vg_crd)
+dim(gbi_pc_crd)
+summary(gbi_pc_crd)
+dim(gbi_to_crd)
+summary(gbi_to_crd)
+
+
+# Create SpatVector
+## We choose an area-conservative projection, namely Albers Equal Area, EPSG:9822
+## See also https://epsg.io/9822-method
+ve_vg = vect(gbi_vg_crd,geom=c("decimalLongitude","decimalLatitude"),
+             crs="+init=epsg:9822")
+ve_pc = vect(gbi_pc_crd,geom=c("decimalLongitude","decimalLatitude"),
+             crs="+init=epsg:9822")
+ve_to = vect(gbi_to_crd,geom=c("decimalLongitude","decimalLatitude"),
+             crs="+init=epsg:9822")
+
+# Visualize
+data(coastsCoarse)
+{par(mfrow = c(1,3))
+plot(ve_vg, main = expression(paste(italic('Vultur gryphus'))), col = '#004D4050', pch = 16, cex = .8, xlab = "Longitude", ylab = "Latitude")
+plot(coastsCoarse, add = T, col = "grey")
+plot(ve_pc, main = expression(paste(italic('Puma concolor'))), col = '#004D4050', pch = 16, cex = .8, xlab = "Longitude", ylab = "Latitude")
+plot(coastsCoarse, add = T, col = "grey")
+plot(ve_to, main = expression(paste(italic('Tremarctos ornatus'))), col = '#004D4050', pch = 16, cex = .8, xlab = "Longitude", ylab = "Latitude")
+plot(coastsCoarse, add = T, col = "grey")}
+
+## Next steps (Manuel): Mask water bodies, possibly crop the data to northern South America, acquire environmental data from worldclim, possibly disaggregate occurence data based on resolution of environmental rasters.
+```
+
+#### Considerations for the approach
+
 Area-conservative projection: Albers equal area conic projection (epsg.io)
 
 Mask water bodies
@@ -141,5 +171,3 @@ Splitting data into months, fitting months separately (is one habitat more impor
 Environmental or spatial stratification of pseudo-absences
 
 We start with random pseudo-absences
-
-test
