@@ -26,7 +26,7 @@ Weekly meetings on Tuesdays at 4:15 PM on the green floor in CHN or in F77 (no m
 Summarize and email questions to Monika before the meetings.
 
 | Date        | Progress Milestone                                                                          | Suggested Focus                                                     |
-|---------------|---------------------------------|------------------------|
+|------------------|--------------------------------|-----------------------|
 | 03.04-07.04 | Species occurrence data downloaded and cleaned                                              | Data retrieval and cleaning                                         |
 | 10.04-14.05 | Environmental data prepared for model fitting                                               | Environmental exploration                                           |
 | 17.04-21.04 | 1.Initial set of predictors selected 2.Created 1st set of PAs (e.g.: random)                | Environmental predictors ; Pseudoabsence creation (PAs)             |
@@ -43,7 +43,7 @@ Summarize and email questions to Monika before the meetings.
 
 Examine records from GBIF, remove erroneous entries and ones without geolocation, and duplicate records. Remove low-quality records (e.g.: based on spatial and temporal accuracy) and outliers (compare with range maps).
 
-If there is time, familiarize yourself with environmental data (crop to the study extent, broadly), download bioclimatic data from Chelsea ([https://chelsa-climate.org/bioclim/),](https://chelsa-climate.org/bioclim/),) explore additional data (topography, rivers and lakes shapefiles (these will need to be rasterized and distance calculated), land cover, degree of openness etc.)
+If there is time, familiarize yourself with environmental data (crop to the study extent, broadly), download bioclimatic data from Chelsea ([https://chelsa-climate.org/bioclim/)](https://chelsa-climate.org/bioclim/) explore additional data (topography, rivers and lakes shapefiles (these will need to be rasterized and distance calculated), land cover, degree of openness etc.)
 
 ```{r}
 # Data acquisition
@@ -109,9 +109,9 @@ lib_vect <- c("terra", "ranger", "ecospat", "dismo", "rworldmap")
 sapply(lib_vect,require,character.only=TRUE)
 
 # Read in data
-condor <- read.csv("gbi_vg.csv")
-puma <- read.csv("gbi_pc.csv")
-bear <- read.csv("gbi_to.csv")
+condor <- read.csv("Occurence data/gbi_vg.csv")
+puma <- read.csv("Occurence data/gbi_pc.csv")
+bear <- read.csv("Occurence data/gbi_to.csv")
 
 
 # Extract essential columns
@@ -158,9 +158,27 @@ plot(coastsCoarse, add = T, col = "grey")}
 ## Next steps (Manuel): Mask water bodies, possibly crop the data to northern South America, acquire environmental data from worldclim, possibly disaggregate occurence data based on resolution of environmental rasters.
 ```
 
-#### Considerations for the approach
+## Week 2: Data Preparation
 
-Area-conservative projection: Albers equal area conic projection (epsg.io)
+Goal: selecting, cropping, reprojecting, and aligning rasters.
+
+Rasters to consider:
+
+-   Bioclimatic (obtain from CHELSA <https://chelsa-climate.org/bioclim/>)
+
+-   Tree cover
+
+-   Tree height
+
+-   DEM (later calculate aspect and slope in R
+
+-   Population density
+
+-   Distance to water
+
+-   Landscape openness
+
+Decide on trade-off between grain size and extent
 
 Mask water bodies
 
@@ -171,3 +189,24 @@ Splitting data into months, fitting months separately (is one habitat more impor
 Environmental or spatial stratification of pseudo-absences
 
 We start with random pseudo-absences
+
+We choose to use an area-conservative projection: Albers equal area conic projection (epsg.io)
+
+```{r}
+# Generating slope and aspect from DEM:
+# library(terra)
+# (dem <- rast("Rasters/DEM.tif"))
+# slope <- terrain(x = dem, v = "slope")
+# aspect <- terrain(x = dem, v = "aspect")
+# 
+# writeRaster(slope, "Rasters/slope.tif")
+# writeRaster(aspect, "Rasters/aspect.tif")
+
+############################################################################################
+#The code above has been run, the files are stored in the repository, please don't run again but access the files directly (Manuel 13/4; 17:47)
+############################################################################################
+
+# I uploaded the following rasters to the repository:
+# DEM, tree cover, canopy height, slope, aspect
+# Still missing: Rivers, population density, bioclimatic variables
+```
