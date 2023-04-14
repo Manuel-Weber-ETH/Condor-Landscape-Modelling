@@ -26,7 +26,7 @@ Weekly meetings on Tuesdays at 4:15 PM on the green floor in CHN or in F77 (no m
 Summarize and email questions to Monika before the meetings.
 
 | Date        | Progress Milestone                                                                          | Suggested Focus                                                     |
-|------------------|--------------------------------|-----------------------|
+|-------------|---------------------------------------------------------------------------------------------|---------------------------------------------------------------------|
 | 03.04-07.04 | Species occurrence data downloaded and cleaned                                              | Data retrieval and cleaning                                         |
 | 10.04-14.05 | Environmental data prepared for model fitting                                               | Environmental exploration                                           |
 | 17.04-21.04 | 1.Initial set of predictors selected 2.Created 1st set of PAs (e.g.: random)                | Environmental predictors ; Pseudoabsence creation (PAs)             |
