@@ -243,3 +243,4 @@ We choose to use an area-conservative projection: Albers equal area conic projec
 # DEM, tree cover, canopy height, slope, aspect
 # Still missing: Rivers, population density, bioclimatic variables
 ```
+testJ
