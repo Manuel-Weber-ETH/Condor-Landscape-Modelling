@@ -115,6 +115,13 @@ gbi_vg_crd <- condor[,c("decimalLongitude", "decimalLatitude",
 dim(gbi_vg_crd)
 summary(gbi_vg_crd)
 
+#We have 40'039 observations, of which 37'902 have no data about the coordinate precision.
+
+# Fraction of imprecise observations 
+tb_vg <- table(gbi_vg_crd$coordinateUncertaintyInMeters<=1000)
+round(as.numeric(tb_vg[1]/tb_vg), digits = 2)
+
+sum(gbi_vg_crd$coordinateUncertaintyInMeters < 1000)
 
 # Create SpatVector
 suppressPackageStartupMessages(library(dismo))
@@ -123,14 +130,8 @@ ve_vg = vect(gbi_vg_ss,geom=c("decimalLongitude","decimalLatitude"),
 ve_vg = vect(gbi_vg_crd,geom=c("decimalLongitude","decimalLatitude"),
              crs="+init=epsg:4326")
 
-
-## Get shapefile of Switzerland
-shape_ch <- vect(x = "input/Shapefile_CH/ch.sp.shp")
-
-south_america <- rast("South_America.shp")
-
 # Plot the data
-par(mfrow = c(1,2))
+par(msouth_america
 plot(shape_ch, main = expression(paste(italic('Vultur gryphus'))), 
      axes = FALSE, mar = c(.5,.5,1,.5))
 points(ve_vg, col = '#004D4050', pch = 16, cex = .8)
