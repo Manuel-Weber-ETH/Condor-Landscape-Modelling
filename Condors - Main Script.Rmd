@@ -239,5 +239,57 @@ We choose to use an area-conservative projection: Albers equal area conic projec
 # I uploaded the following rasters to the repository:
 # DEM, tree cover, canopy height, slope, aspect
 # Still missing: Rivers, population density, bioclimatic variables
+
+#insert Rasters
+pop_dens <- raster("C:/Users/justi/OneDrive/Studium/Umweltnaturwissenschaften/Landscape Modelling/Condor/download polybox/gpw_v4_population_density_rev11_2020_30_sec.tif")
+
+#convert to Spatraster
+slope <- as(slope, "SpatRaster")
+aspect <- as(aspect, "SpatRaster")
+pop_dens <- as(pop_dens, "SpatRaster")
+dem <- as(dem, "SpatRaster")
+
+pop_dens <- project(pop_dens, slope) #same projection as slope
+plot(pop_dens, axes = F, col = rainbow(73))
+
+compareGeom(slope, pop_dens)
+
+### Climatic predictors
+## Temperature
+# Mean annual air temperature
+bio1 <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio1_2011-2040_gfdl-esm4_ssp126_V.2.1.tif')
+#Annual range of air temperature
+bio7 <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio7_2011-2040_gfdl-esm4_ssp126_V.2.1.tif')
+
+## Precipitation
+# Annual Precipitation amount
+bio12 <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio12_2011-2040_gfdl-esm4_ssp126_V.2.1.tif')
+# Precipitation amount of the wettest month
+bio13 <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio13_2011-2040_gfdl-esm4_ssp126_V.2.1.tif')
+# Precipitation amount of the driest month
+bio14 <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio14_2011-2040_gfdl-esm4_ssp126_V.2.1.tif')
+
+## Tree cover
+tree_cover <- rast("C:\Users\tanja\OneDrive\Dokumente\UZH FS_23\Landscape Modelling\Project\API_AG.LND.FRST.ZS_DS2_en_csv_v2_5358376\API_AG.LND.FRST.ZS_DS2_en_csv_v2_5358376.csv")
+
+## Create one predictor layer
+# Check if the resolution, origin and coordinate reference system match among the different layers with the *compareGeom* function
+compareGeom(dem, bio1, bio7, bio12, bio13, bio14)
+
+# Reproject the *bio* raster so they have the same spatial properties as the *dem* raster
+bio1 <- project(bio1, dem)
+bio7 <- project(bio7, dem)
+bio12 <- project(bio12, dem)
+bio13 <- project(bio13, dem)
+bio14 <- project(bio14, dem)
+
+# Check again with *copmareGeom* function
+compareGeom(dem, bio1, bio7, bio12, bio13, bio14)
+
+# Stacking of the layers
+predictors <- c(dem, slope, aspect, pop_dens, bio1, bio7, bio12, bio13, bio14)
+names(predictors) <- c('dem', 'bio1', 'bio7', 'bio12', 'bio13', 'bio14')predictors
+predictors
 ```
-testJ
+
+```
