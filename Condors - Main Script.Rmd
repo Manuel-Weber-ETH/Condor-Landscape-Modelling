@@ -86,6 +86,39 @@ If there is time, familiarize yourself with environmental data (crop to the stud
 ############################################################################################
 
 
+<<<<<<< HEAD
+  # Extract essential columns
+  gbi_vg_crd <- gbi_vg_crd$data[,c("decimalLongitude", "decimalLatitude", 
+                             "coordinateUncertaintyInMeters", "occurrenceStatus")]
+  gbi_vg_crd$occurrenceStatus <- as.factor(gbi_vg_crd$occurrenceStatus)
+
+
+# Inspect output
+dim(gbi_vg_crd)
+summary(gbi_vg_crd)
+
+#We have 40'039 observations, of which 37'902 have no data about the coordinate precision.
+
+# Fraction of imprecise observations 
+tb_vg <- table(gbi_vg_crd$coordinateUncertaintyInMeters<=1000)
+round(as.numeric(tb_vg[1]/tb_vg), digits = 2)
+
+sum(gbi_vg_crd$coordinateUncertaintyInMeters < 1000)
+
+# Create SpatVector
+suppressPackageStartupMessages(library(dismo))
+ve_vg = vect(gbi_vg_ss,geom=c("decimalLongitude","decimalLatitude"),
+             crs="+init=epsg:4326")
+ve_vg = vect(gbi_vg_crd,geom=c("decimalLongitude","decimalLatitude"),
+             crs="+init=epsg:4326")
+
+# Plot the data
+par(msouth_america
+plot(shape_ch, main = expression(paste(italic('Vultur gryphus'))), 
+     axes = FALSE, mar = c(.5,.5,1,.5))
+points(ve_vg, col = '#004D4050', pch = 16, cex = .8)
+=======
+>>>>>>> 40753b95632022ef078cdc13a88fa9eaf394322d
 ```
 
 #### SDM resources
@@ -210,3 +243,4 @@ We choose to use an area-conservative projection: Albers equal area conic projec
 # DEM, tree cover, canopy height, slope, aspect
 # Still missing: Rivers, population density, bioclimatic variables
 ```
+testJ
