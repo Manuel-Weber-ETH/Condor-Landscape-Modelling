@@ -113,12 +113,9 @@ ve_vg = vect(gbi_vg_crd,geom=c("decimalLongitude","decimalLatitude"),
              crs="+init=epsg:4326")
 
 # Plot the data
-par(msouth_america
 plot(shape_ch, main = expression(paste(italic('Vultur gryphus'))), 
      axes = FALSE, mar = c(.5,.5,1,.5))
 points(ve_vg, col = '#004D4050', pch = 16, cex = .8)
-=======
->>>>>>> 40753b95632022ef078cdc13a88fa9eaf394322d
 ```
 
 #### SDM resources
