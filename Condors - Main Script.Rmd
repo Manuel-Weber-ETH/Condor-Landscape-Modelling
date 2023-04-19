@@ -110,136 +110,142 @@ Some information about habitat and diet of the 3 focal species
 ## Chunk 2: Species Occurrence Data Cleaning and Visualizing
 
 ```{r}
-# Cleaning, projecting and visualizing data
-# Loading packages
-lib_vect <- c("terra", "ranger", "ecospat", "dismo", "rworldmap", "CoordinateCleaner", "dplyr")
-sapply(lib_vect,require,character.only=TRUE)
+# # Cleaning, projecting and visualizing data
+# # Loading packages
+# lib_vect <- c("terra", "ranger", "ecospat", "dismo", "rworldmap", "CoordinateCleaner", "dplyr")
+# sapply(lib_vect,require,character.only=TRUE)
+# 
+# # Read in data
+# condor <- read.csv("Occurence data/gbi_vg.csv")
+# puma <- read.csv("Occurence data/gbi_pc.csv")
+# bear <- read.csv("Occurence data/gbi_to.csv")
+# 
+# # Cleaning data
+# # The sepecies infomration can be used to help identify duplicates. We can also identify other criteria to test for.
+# coordinate_flags_condor <- clean_coordinates(x=condor, lon="decimalLongitude", lat="decimalLatitude", countries="countryCode", species="scientificName", tests= c("centroids","gbif","institutions","duplicates","seas","zeros"), verbose=T)
+# 
+# coordinate_flags_puma <- clean_coordinates(x=puma, lon="decimalLongitude", lat="decimalLatitude", countries="countryCode", species="scientificName", tests= c("centroids","gbif","institutions","duplicates","seas","zeros"), verbose=T)
+# 
+# coordinate_flags_bear <- clean_coordinates(x=bear, lon="decimalLongitude", lat="decimalLatitude", countries="countryCode", species="scientificName", tests= c("centroids","gbif","institutions","duplicates","seas","zeros"), verbose=T)
+# 
+# # Add wheteher or not the points were flagged to the datafame
+# condor$flags <- as.factor(coordinate_flags_condor$.summary)
+# puma$flags <- as.factor(coordinate_flags_puma$.summary)
+# bear$flags <- as.factor(coordinate_flags_bear$.summary)
+# 
+# # Remove the problematic points
+# condor <- subset(condor, condor$flags=="TRUE")
+# puma <- subset(puma, puma$flags=="TRUE")
+# bear <- subset(bear, bear$flags=="TRUE")
+# 
+# # Save the cleaned datasets
+# write.csv(condor, "Occurence data/condor_cleaned.csv")
+# write.csv(puma, "Occurence data/puma_cleaned.csv")
+# write.csv(bear, "Occurence data/bear_cleaned.csv")
+# 
+# # Extract essential columns
+# gbi_vg_crd <- condor[,c("decimalLongitude", "decimalLatitude", 
+#                         "coordinateUncertaintyInMeters", "occurrenceStatus")]
+# gbi_vg_crd$occurrenceStatus <- as.factor(gbi_vg_crd$occurrenceStatus)
+# gbi_pc_crd <- puma[,c("decimalLongitude", "decimalLatitude", 
+#                       "coordinateUncertaintyInMeters", "occurrenceStatus")]
+# gbi_pc_crd$occurrenceStatus <- as.factor(gbi_pc_crd$occurrenceStatus)
+# gbi_to_crd <- bear[,c("decimalLongitude", "decimalLatitude", 
+#                       "coordinateUncertaintyInMeters", "occurrenceStatus")]
+# gbi_to_crd$occurrenceStatus <- as.factor(gbi_to_crd$occurrenceStatus)
+# 
+# # Crop data to northern South America
+# gbi_vg_crd <- filter(gbi_vg_crd, decimalLatitude >= mean(condor$decimalLatitude))
+# nrow(gbi_vg_crd)
+# ## 5490 observations left
+# gbi_pc_crd <- filter(gbi_pc_crd, decimalLatitude >= mean(condor$decimalLatitude))
+# nrow(gbi_pc_crd)
+# ## 1340 observations left
+# gbi_to_crd <- filter(gbi_to_crd, decimalLatitude >= mean(condor$decimalLatitude))
+# nrow(gbi_to_crd)
+# ## 2152 observations left
+# 
+# # Fraction of observations with no information on coordinate precision
+# sna_vg <- length(which(is.na(gbi_vg_crd$coordinateUncertaintyInMeters)))
+# sna_pc <- length(which(is.na(gbi_pc_crd$coordinateUncertaintyInMeters)))
+# sna_to <- length(which(is.na(gbi_to_crd$coordinateUncertaintyInMeters)))
+# 
+# round((sna_vg+sna_pc+sna_to)/(nrow(gbi_vg_crd)+nrow(gbi_pc_crd)+nrow(gbi_to_crd))*100, digits = 2)
+# ## 91% of the data doesn't contains no information at all about coordinate precision
+# 
+# # Fraction of imprecise observations
+# tb_vg <- table(gbi_vg_crd$coordinateUncertaintyInMeters<=100000)
+# tb_pc <- table(gbi_pc_crd$coordinateUncertaintyInMeters<=100000)
+# tb_to <- table(gbi_to_crd$coordinateUncertaintyInMeters<=100000)
+# 
+# round(as.numeric((tb_vg[1]+tb_pc[1]+tb_to[1])/(sum(tb_vg)+sum(tb_pc)+sum(tb_to))*100), digits = 2)
+# ## 0.6% of the observations are less precise than 100 km
+# 
+# tb_vg <- table(gbi_vg_crd$coordinateUncertaintyInMeters<=10000)
+# tb_pc <- table(gbi_pc_crd$coordinateUncertaintyInMeters<=10000)
+# tb_to <- table(gbi_to_crd$coordinateUncertaintyInMeters<=10000)
+# 
+# round(as.numeric((tb_vg[1]+tb_pc[1]+tb_to[1])/(sum(tb_vg)+sum(tb_pc)+sum(tb_to))*100), digits = 2)
+# ## 63.6 % of the observations are less precise than 10 km
+# 
+# tb_vg <- table(gbi_vg_crd$coordinateUncertaintyInMeters<=1000)
+# tb_pc <- table(gbi_pc_crd$coordinateUncertaintyInMeters<=1000)
+# tb_to <- table(gbi_to_crd$coordinateUncertaintyInMeters<=1000)
+# 
+# round(as.numeric((tb_vg[1]+tb_pc[1]+tb_to[1])/(sum(tb_vg)+sum(tb_pc)+sum(tb_to))*100), digits = 2)
+# ## 71.5% of the observations are less precise than 1 km
+# 
+# library(rworldmap)
+# # Transforming the occurence data to Albers Equal Area ESRI:102033, using the DEM as template
+# dem <- rast("Rasters/DEM.tif")
+# 
+# coordinates(gbi_vg_crd) <- c("decimalLongitude", "decimalLatitude")
+# coordinates(gbi_pc_crd) <- c("decimalLongitude", "decimalLatitude")
+# coordinates(gbi_to_crd) <- c("decimalLongitude", "decimalLatitude")
+# 
+# raster::crs(gbi_vg_crd) <-  'EPSG:4326'
+# raster::crs(gbi_pc_crd) <-  'EPSG:4326'
+# raster::crs(gbi_to_crd) <-  'EPSG:4326' ### we first need to set the crs before being able to transform it
+# 
+# gbi_vg_crd <- spTransform(gbi_vg_crd, CRS(terra::crs(dem)))
+# gbi_pc_crd <- spTransform(gbi_pc_crd, CRS(terra::crs(dem)))
+# gbi_to_crd <- spTransform(gbi_to_crd, CRS(terra::crs(dem)))
+# 
+# gbi_vg_crd <- as.data.frame(gbi_vg_crd)
+# gbi_pc_crd <- as.data.frame(gbi_pc_crd)
+# gbi_to_crd <- as.data.frame(gbi_to_crd)
+# 
+# # Saving the preprocessed data (we should overwrite these files later after transforming the coordinates to esri:102033)
+# write.csv(gbi_vg_crd, "Occurence data/condor_final.csv")
+# write.csv(gbi_pc_crd, "Occurence data/puma_final.csv")
+# write.csv(gbi_to_crd, "Occurence data/bear_final.csv")
+# 
+# # Visualizing the data
+# ## Create spatial vectors with the projection of interest (esri:102033)
+# 
+# ve_vg = vect(gbi_vg_crd,geom=c("decimalLongitude","decimalLatitude"),
+#              crs=crs(dem))
+# ve_pc = vect(gbi_pc_crd,geom=c("decimalLongitude","decimalLatitude"),
+#              crs=crs(dem))
+# ve_to = vect(gbi_to_crd,geom=c("decimalLongitude","decimalLatitude"),
+#              crs=crs(dem))
+# 
+# data(coastsCoarse)
+# raster::crs(coastsCoarse) <- "EPSG:4326"
+# coastsCoarse <- spTransform(coastsCoarse, CRS(terra::crs(dem)))
+#
+# {par(mfrow = c(1,3))
+# plot(ve_vg, main = expression(paste(italic('Vultur gryphus'))), col = '#004D4050', pch = 16, cex = .8, xlab = "Longitude", ylab = "Latitude")
+# plot(coastsCoarse, add = T, col = "grey")
+# plot(ve_pc, main = expression(paste(italic('Puma concolor'))), col = '#004D4050', pch = 16, cex = .8, xlab = "Longitude", ylab = "Latitude")
+# plot(coastsCoarse, add = T, col = "grey")
+# plot(ve_to, main = expression(paste(italic('Tremarctos ornatus'))), col = '#004D4050', pch = 16, cex = .8, xlab = "Longitude", ylab = "Latitude")
+# plot(coastsCoarse, add = T, col = "grey")}
 
-# Read in data
-condor <- read.csv("Occurence data/gbi_vg.csv")
-puma <- read.csv("Occurence data/gbi_pc.csv")
-bear <- read.csv("Occurence data/gbi_to.csv")
+############################################################################################
+#The code above has been run, the files are stored in the repository, please don't run again but access the files directly (Manuel 19/4; 21:22)
+############################################################################################
 
-# Cleaning data
-# The sepecies infomration can be used to help identify duplicates. We can also identify other criteria to test for.
-coordinate_flags_condor <- clean_coordinates(x=condor, lon="decimalLongitude", lat="decimalLatitude", countries="countryCode", species="scientificName", tests= c("centroids","gbif","institutions","duplicates","seas","zeros"), verbose=T)
-
-coordinate_flags_puma <- clean_coordinates(x=puma, lon="decimalLongitude", lat="decimalLatitude", countries="countryCode", species="scientificName", tests= c("centroids","gbif","institutions","duplicates","seas","zeros"), verbose=T)
-
-coordinate_flags_bear <- clean_coordinates(x=bear, lon="decimalLongitude", lat="decimalLatitude", countries="countryCode", species="scientificName", tests= c("centroids","gbif","institutions","duplicates","seas","zeros"), verbose=T)
-
-# Add wheteher or not the points were flagged to the datafame
-condor$flags <- as.factor(coordinate_flags_condor$.summary)
-puma$flags <- as.factor(coordinate_flags_puma$.summary)
-bear$flags <- as.factor(coordinate_flags_bear$.summary)
-
-# Remove the problematic points
-condor <- subset(condor, condor$flags=="TRUE")
-puma <- subset(puma, puma$flags=="TRUE")
-bear <- subset(bear, bear$flags=="TRUE")
-
-# Save the cleaned datasets
-write.csv(condor, "Occurence data/condor_cleaned.csv")
-write.csv(puma, "Occurence data/puma_cleaned.csv")
-write.csv(bear, "Occurence data/bear_cleaned.csv")
-
-# Extract essential columns
-gbi_vg_crd <- condor[,c("decimalLongitude", "decimalLatitude", 
-                             "coordinateUncertaintyInMeters", "occurrenceStatus")]
-gbi_vg_crd$occurrenceStatus <- as.factor(gbi_vg_crd$occurrenceStatus)
-gbi_pc_crd <- puma[,c("decimalLongitude", "decimalLatitude", 
-                             "coordinateUncertaintyInMeters", "occurrenceStatus")]
-gbi_pc_crd$occurrenceStatus <- as.factor(gbi_pc_crd$occurrenceStatus)
-gbi_to_crd <- bear[,c("decimalLongitude", "decimalLatitude", 
-                             "coordinateUncertaintyInMeters", "occurrenceStatus")]
-gbi_to_crd$occurrenceStatus <- as.factor(gbi_to_crd$occurrenceStatus)
-
-# Crop data to northern South America
-gbi_vg_crd <- filter(gbi_vg_crd, decimalLatitude >= mean(condor$decimalLatitude))
-nrow(gbi_vg_crd)
-## 5490 observations left
-gbi_pc_crd <- filter(gbi_pc_crd, decimalLatitude >= mean(condor$decimalLatitude))
-nrow(gbi_pc_crd)
-## 1340 observations left
-gbi_to_crd <- filter(gbi_to_crd, decimalLatitude >= mean(condor$decimalLatitude))
-nrow(gbi_to_crd)
-## 2152 observations left
-
-# Fraction of observations with no information on coordinate precision
-sna_vg <- length(which(is.na(gbi_vg_crd$coordinateUncertaintyInMeters)))
-sna_pc <- length(which(is.na(gbi_pc_crd$coordinateUncertaintyInMeters)))
-sna_to <- length(which(is.na(gbi_to_crd$coordinateUncertaintyInMeters)))
-
-round((sna_vg+sna_pc+sna_to)/(nrow(gbi_vg_crd)+nrow(gbi_pc_crd)+nrow(gbi_to_crd))*100, digits = 2)
-## 91% of the data doesn't contains no information at all about coordinate precision
-
-# Fraction of imprecise observations
-tb_vg <- table(gbi_vg_crd$coordinateUncertaintyInMeters<=100000)
-tb_pc <- table(gbi_pc_crd$coordinateUncertaintyInMeters<=100000)
-tb_to <- table(gbi_to_crd$coordinateUncertaintyInMeters<=100000)
-
-round(as.numeric((tb_vg[1]+tb_pc[1]+tb_to[1])/(sum(tb_vg)+sum(tb_pc)+sum(tb_to))*100), digits = 2)
-## 0.6% of the observations are less precise than 100 km
-
-tb_vg <- table(gbi_vg_crd$coordinateUncertaintyInMeters<=10000)
-tb_pc <- table(gbi_pc_crd$coordinateUncertaintyInMeters<=10000)
-tb_to <- table(gbi_to_crd$coordinateUncertaintyInMeters<=10000)
-
-round(as.numeric((tb_vg[1]+tb_pc[1]+tb_to[1])/(sum(tb_vg)+sum(tb_pc)+sum(tb_to))*100), digits = 2)
-## 63.6 % of the observations are less precise than 10 km
-
-tb_vg <- table(gbi_vg_crd$coordinateUncertaintyInMeters<=1000)
-tb_pc <- table(gbi_pc_crd$coordinateUncertaintyInMeters<=1000)
-tb_to <- table(gbi_to_crd$coordinateUncertaintyInMeters<=1000)
-
-round(as.numeric((tb_vg[1]+tb_pc[1]+tb_to[1])/(sum(tb_vg)+sum(tb_pc)+sum(tb_to))*100), digits = 2)
-## 71.5% of the observations are less precise than 1 km
-
-library(coastsCoarse)
-# Transforming the occurence data to Albers Equal Area ESRI:102033, using the DEM as template
-dem <- rast("Rasters/DEM.tif")
-
-coordinates(gbi_vg_crd) <- c("decimalLongitude", "decimalLatitude")
-coordinates(gbi_pc_crd) <- c("decimalLongitude", "decimalLatitude")
-coordinates(gbi_to_crd) <- c("decimalLongitude", "decimalLatitude")
-
-raster::crs(gbi_vg_crd) <-  'EPSG:4326'
-raster::crs(gbi_pc_crd) <-  'EPSG:4326'
-raster::crs(gbi_to_crd) <-  'EPSG:4326' ### we first need to set the crs before being able to transform it
-
-gbi_vg_crd <- spTransform(gbi_vg_crd, CRS(terra::crs(dem)))
-gbi_pc_crd <- spTransform(gbi_pc_crd, CRS(terra::crs(dem)))
-gbi_to_crd <- spTransform(gbi_to_crd, CRS(terra::crs(dem)))
-
-gbi_vg_crd <- as.data.frame(gbi_vg_crd)
-gbi_pc_crd <- as.data.frame(gbi_pc_crd)
-gbi_to_crd <- as.data.frame(gbi_to_crd)
-
-# Saving the preprocessed data (we should overwrite these files later after transforming the coordinates to esri:102033)
-write.csv(gbi_vg_crd, "Occurence data/condor_final.csv")
-write.csv(gbi_pc_crd, "Occurence data/puma_final.csv")
-write.csv(gbi_to_crd, "Occurence data/bear_final.csv")
-
-# Visualizing the data
-## Create spatial vectors with the projection of interest (esri:102033)
-
-ve_vg = vect(gbi_vg_crd,geom=c("decimalLongitude","decimalLatitude"),
-             crs=crs(dem))
-ve_pc = vect(gbi_pc_crd,geom=c("decimalLongitude","decimalLatitude"),
-             crs=crs(dem))
-ve_to = vect(gbi_to_crd,geom=c("decimalLongitude","decimalLatitude"),
-             crs=crs(dem))
-
-{data(coastsCoarse)
-par(mfrow = c(1,3))
-plot(ve_vg, main = expression(paste(italic('Vultur gryphus'))), col = '#004D4050', pch = 16, cex = .8, xlab = "Longitude", ylab = "Latitude")
-plot(coastsCoarse, add = T, col = "grey")
-abline(h = mean(condor$decimalLatitude), col = "red") # add line to show the scope of the study
-plot(ve_pc, main = expression(paste(italic('Puma concolor'))), col = '#004D4050', pch = 16, cex = .8, xlab = "Longitude", ylab = "Latitude")
-plot(coastsCoarse, add = T, col = "grey")
-abline(h = mean(condor$decimalLatitude), col = "red") # add line to show the scope of the study
-plot(ve_to, main = expression(paste(italic('Tremarctos ornatus'))), col = '#004D4050', pch = 16, cex = .8, xlab = "Longitude", ylab = "Latitude")
-plot(coastsCoarse, add = T, col = "grey")}
 ```
 
 dem_reprojected \<- terra::project(x = dem, y = "ESRI:102033", method = "near")
