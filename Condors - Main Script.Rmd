@@ -138,7 +138,10 @@ condor <- subset(condor, condor$flags=="TRUE")
 puma <- subset(puma, puma$flags=="TRUE")
 bear <- subset(bear, bear$flags=="TRUE")
 
-
+# Save the cleaned datasets
+write.csv(condor, "Occurence data/condor_cleaned.csv")
+write.csv(puma, "Occurence data/puma_cleaned.csv")
+write.csv(bear, "Occurence data/bear_cleaned.csv")
 
 # Extract essential columns
 gbi_vg_crd <- condor[,c("decimalLongitude", "decimalLatitude", 
@@ -151,6 +154,16 @@ gbi_to_crd <- bear[,c("decimalLongitude", "decimalLatitude",
                              "coordinateUncertaintyInMeters", "occurrenceStatus")]
 gbi_to_crd$occurrenceStatus <- as.factor(gbi_to_crd$occurrenceStatus)
 
+# Crop data to northern South America
+gbi_vg_crd <- filter(gbi_vg_crd, decimalLatitude >= mean(condor$decimalLatitude))
+nrow(gbi_vg_crd)
+## 15506 observations left
+gbi_pc_crd <- filter(gbi_pc_crd, decimalLatitude >= mean(condor$decimalLatitude))
+nrow(gbi_pc_crd)
+## 2324 observations left
+gbi_to_crd <- filter(gbi_to_crd, decimalLatitude >= mean(condor$decimalLatitude))
+nrow(gbi_to_crd)
+## 7329 observations left
 
 # Inspect output
 dim(gbi_vg_crd)
@@ -182,19 +195,6 @@ plot(ve_to, main = expression(paste(italic('Tremarctos ornatus'))), col = '#004D
 plot(coastsCoarse, add = T, col = "grey")}
 
 ## Next steps (Manuel): Mask water bodies, possibly crop the data to northern South America, acquire environmental data from worldclim, possibly disaggregate occurence data based on resolution of environmental rasters.
-
-
-
-# Crop data to northern South America
-gbi_vg_crd <- filter(gbi_vg_crd, decimalLatitude >= mean(condor$decimalLatitude))
-nrow(gbi_vg_crd)
-## 15506 observations left
-gbi_pc_crd <- filter(gbi_pc_crd, decimalLatitude >= mean(condor$decimalLatitude))
-nrow(gbi_pc_crd)
-## 2324 observations left
-gbi_to_crd <- filter(gbi_to_crd, decimalLatitude >= mean(condor$decimalLatitude))
-nrow(gbi_to_crd)
-## 7329 observations left
 
 
 # Extract relevant columns
