@@ -241,18 +241,9 @@ We choose to use an area-conservative projection: Albers equal area conic projec
 # Still missing: Rivers, population density, bioclimatic variables
 
 #insert Rasters
+
+##population density
 pop_dens <- raster("C:/Users/justi/OneDrive/Studium/Umweltnaturwissenschaften/Landscape Modelling/Condor/download polybox/gpw_v4_population_density_rev11_2020_30_sec.tif")
-
-#convert to Spatraster
-slope <- as(slope, "SpatRaster")
-aspect <- as(aspect, "SpatRaster")
-pop_dens <- as(pop_dens, "SpatRaster")
-dem <- as(dem, "SpatRaster")
-
-pop_dens <- project(pop_dens, slope) #same projection as slope
-plot(pop_dens, axes = F, col = rainbow(73))
-
-compareGeom(slope, pop_dens)
 
 ### Climatic predictors
 ## Temperature
@@ -272,9 +263,11 @@ bio14 <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Model
 ## Tree cover
 tree_cover <- rast("C:\Users\tanja\OneDrive\Dokumente\UZH FS_23\Landscape Modelling\Project\API_AG.LND.FRST.ZS_DS2_en_csv_v2_5358376\API_AG.LND.FRST.ZS_DS2_en_csv_v2_5358376.csv")
 
-## Create one predictor layer
-# Check if the resolution, origin and coordinate reference system match among the different layers with the *compareGeom* function
-compareGeom(dem, bio1, bio7, bio12, bio13, bio14)
+#convert to Spatraster
+slope <- as(slope, "SpatRaster")
+aspect <- as(aspect, "SpatRaster")
+pop_dens <- as(pop_dens, "SpatRaster")
+dem <- as(dem, "SpatRaster")
 
 # Reproject the *bio* raster so they have the same spatial properties as the *dem* raster
 bio1 <- project(bio1, dem)
@@ -282,13 +275,23 @@ bio7 <- project(bio7, dem)
 bio12 <- project(bio12, dem)
 bio13 <- project(bio13, dem)
 bio14 <- project(bio14, dem)
+pop_dens <- project(pop_dens, dem)
 
-# Check again with *copmareGeom* function
-compareGeom(dem, bio1, bio7, bio12, bio13, bio14)
+## Create one predictor layer
+# Check if the resolution, origin and coordinate reference system match among the different layers with the *compareGeom* function
+compareGeom(dem, slope, aspect, pop_dens, bio1, bio7, bio12, bio13, bio14)
+
+#store raster
+writeRaster(pop_dens, "Rasters/pop_dens.tif")
+writeRaster(bio1, "Rasters/bio1.tif")
+writeRaster(bio7, "Rasters/bio7.tif")
+writeRaster(bio12, "Rasters/bio12.tif")
+writeRaster(bio13, "Rasters/bio13.tif")
+writeRaster(bio14, "Rasters/bio14.tif")
 
 # Stacking of the layers
 predictors <- c(dem, slope, aspect, pop_dens, bio1, bio7, bio12, bio13, bio14)
-names(predictors) <- c('dem', 'bio1', 'bio7', 'bio12', 'bio13', 'bio14')predictors
+names(predictors) <- c('dem', 'slope', 'aspect', 'pop_dens', 'bio1', 'bio7', 'bio12', 'bio13', 'bio14')
 predictors
 ```
 
