@@ -112,7 +112,7 @@ Some information about habitat and diet of the 3 focal species
 ```{r}
 # Cleaning, projecting and visualizing data
 # Loading packages
-lib_vect <- c("terra", "ranger", "ecospat", "dismo", "rworldmap", "CoordinateCleaner")
+lib_vect <- c("terra", "ranger", "ecospat", "dismo", "rworldmap", "CoordinateCleaner", "dplyr")
 sapply(lib_vect,require,character.only=TRUE)
 
 # Read in data
@@ -157,71 +157,13 @@ gbi_to_crd$occurrenceStatus <- as.factor(gbi_to_crd$occurrenceStatus)
 # Crop data to northern South America
 gbi_vg_crd <- filter(gbi_vg_crd, decimalLatitude >= mean(condor$decimalLatitude))
 nrow(gbi_vg_crd)
-## 15506 observations left
+## 5490 observations left
 gbi_pc_crd <- filter(gbi_pc_crd, decimalLatitude >= mean(condor$decimalLatitude))
 nrow(gbi_pc_crd)
-## 2324 observations left
+## 1340 observations left
 gbi_to_crd <- filter(gbi_to_crd, decimalLatitude >= mean(condor$decimalLatitude))
 nrow(gbi_to_crd)
-## 7329 observations left
-
-# Inspect output
-dim(gbi_vg_crd)
-summary(gbi_vg_crd)
-dim(gbi_pc_crd)
-summary(gbi_pc_crd)
-dim(gbi_to_crd)
-summary(gbi_to_crd)
-
-
-# Create SpatVector
-## We choose an area-conservative projection, namely Albers Equal Area, esri:102033
-## See also https://epsg.io/9822-method
-ve_vg = vect(gbi_vg_crd,geom=c("decimalLongitude","decimalLatitude"),
-             crs="+init=esri:102033")
-ve_pc = vect(gbi_pc_crd,geom=c("decimalLongitude","decimalLatitude"),
-             crs="+init=epsg:9822")
-ve_to = vect(gbi_to_crd,geom=c("decimalLongitude","decimalLatitude"),
-             crs="+init=epsg:9822")
-
-# Visualize
-data(coastsCoarse)
-{par(mfrow = c(1,3))
-plot(ve_vg, main = expression(paste(italic('Vultur gryphus'))), col = '#004D4050', pch = 16, cex = .8, xlab = "Longitude", ylab = "Latitude")
-plot(coastsCoarse, add = T, col = "grey")
-plot(ve_pc, main = expression(paste(italic('Puma concolor'))), col = '#004D4050', pch = 16, cex = .8, xlab = "Longitude", ylab = "Latitude")
-plot(coastsCoarse, add = T, col = "grey")
-plot(ve_to, main = expression(paste(italic('Tremarctos ornatus'))), col = '#004D4050', pch = 16, cex = .8, xlab = "Longitude", ylab = "Latitude")
-plot(coastsCoarse, add = T, col = "grey")}
-
-## Next steps (Manuel): Mask water bodies, possibly crop the data to northern South America, acquire environmental data from worldclim, possibly disaggregate occurence data based on resolution of environmental rasters.
-
-
-# Extract relevant columns
-gbi_vg_crd <- condor[,c("decimalLongitude", "decimalLatitude", 
-                        "coordinateUncertaintyInMeters", "occurrenceStatus")]
-gbi_vg_crd$occurrenceStatus <- as.factor(gbi_vg_crd$occurrenceStatus)
-gbi_pc_crd <- puma[,c("decimalLongitude", "decimalLatitude", 
-                      "coordinateUncertaintyInMeters", "occurrenceStatus")]
-gbi_pc_crd$occurrenceStatus <- as.factor(gbi_pc_crd$occurrenceStatus)
-gbi_to_crd <- bear[,c("decimalLongitude", "decimalLatitude", 
-                      "coordinateUncertaintyInMeters", "occurrenceStatus")]
-gbi_to_crd$occurrenceStatus <- as.factor(gbi_to_crd$occurrenceStatus)
-
-sum(is.na(gbi_vg_crd$decimalLongitude),
-    is.na(gbi_vg_crd$decimalLatitude),
-    is.na(gbi_pc_crd$decimalLongitude),
-    is.na(gbi_pc_crd$decimalLatitude),
-    is.na(gbi_to_crd$decimalLongitude),
-    is.na(gbi_to_crd$decimalLatitude))
-
-# Inspect output
-dim(gbi_vg_crd) # 40039 observations for the condor
-summary(gbi_vg_crd)
-dim(gbi_pc_crd) # 3785 observations for the puma
-summary(gbi_pc_crd)
-dim(gbi_to_crd) # 7329 observations for the bear
-summary(gbi_to_crd)
+## 2152 observations left
 
 # Fraction of observations with no information on coordinate precision
 sna_vg <- length(which(is.na(gbi_vg_crd$coordinateUncertaintyInMeters)))
@@ -258,6 +200,27 @@ gbi_pc_crd[is.na(gbi_pc_crd)] <- -999
 gbi_to_crd[is.na(gbi_to_crd)] <- -999
 
 
+# Create SpatVector
+## We choose an area-conservative projection, namely Albers Equal Area, esri:102033
+## See also https://epsg.io/9822-method
+ve_vg = vect(gbi_vg_crd,geom=c("decimalLongitude","decimalLatitude"),
+             crs="+init=esri:102033")
+ve_pc = vect(gbi_pc_crd,geom=c("decimalLongitude","decimalLatitude"),
+             crs="+init=epsg:9822")
+ve_to = vect(gbi_to_crd,geom=c("decimalLongitude","decimalLatitude"),
+             crs="+init=epsg:9822")
+
+# Visualize
+data(coastsCoarse)
+{par(mfrow = c(1,3))
+plot(ve_vg, main = expression(paste(italic('Vultur gryphus'))), col = '#004D4050', pch = 16, cex = .8, xlab = "Longitude", ylab = "Latitude")
+plot(coastsCoarse, add = T, col = "grey")
+plot(ve_pc, main = expression(paste(italic('Puma concolor'))), col = '#004D4050', pch = 16, cex = .8, xlab = "Longitude", ylab = "Latitude")
+plot(coastsCoarse, add = T, col = "grey")
+plot(ve_to, main = expression(paste(italic('Tremarctos ornatus'))), col = '#004D4050', pch = 16, cex = .8, xlab = "Longitude", ylab = "Latitude")
+plot(coastsCoarse, add = T, col = "grey")}
+
+## Next steps (Manuel): Mask water bodies, possibly crop the data to northern South America, acquire environmental data from worldclim, possibly disaggregate occurence data based on resolution of environmental rasters.
 
 # Visualizing the data
 ## Create spatial vectors with the projection of interest (epsg:9822)
