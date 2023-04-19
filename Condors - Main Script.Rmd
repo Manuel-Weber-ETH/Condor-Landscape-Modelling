@@ -109,6 +109,8 @@ Some information about habitat and diet of the 3 focal species
 
 ## Chunk 2: Species Occurrence Data Cleaning and Visualizing
 
+The occurence data will be cleaned, cropped to northern South America and reprojected to ESRI:102033.
+
 ```{r}
 # # Cleaning, projecting and visualizing data
 # # Loading packages
@@ -250,7 +252,7 @@ Some information about habitat and diet of the 3 focal species
 
 dem_reprojected \<- terra::project(x = dem, y = "ESRI:102033", method = "near")
 
-## Week 2: Data Preparation
+## Chunk 3: Predictor Acquisition
 
 Goal: selecting, cropping, reprojecting, and aligning rasters.
 
@@ -270,11 +272,7 @@ Rasters to consider:
 
 -   Landscape openness
 
-Decide on trade-off between grain size and extent
-
-Mask water bodies
-
-Maybe limit scope to northern south America
+Decide on trade-off between grain size and extent: For now we use 1x1 km (original resolution of DEM)
 
 Splitting data into months, fitting months separately (is one habitat more important for nesting?)
 
