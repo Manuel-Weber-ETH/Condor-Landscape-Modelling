@@ -334,6 +334,8 @@ names(predictors) <- c('dem', 'slope', 'aspect', 'pop_dens', 'bio1', 'bio7', 'bi
 predictors
 ```
 
+The following chunk is not coded out properly and has not been run. I will work on it over the next few days (Manu, 19/04 11:40).
+
 ```{r}
 # Loading packages
 lib_vect <- c("terra", "ranger", "ecospat", "dismo", "rworldmap", "dplyr", "sf")
@@ -405,10 +407,6 @@ hist(sam_int_pc, breaks = 100, xlab = "counts",
 hist(sam_int_to, breaks = 100, xlab = "counts",
      main = expression(paste(italic('Tremarctos ornatus'))))
 
-
-
-
-clean_coordinates(x = gbifdata, lon = , lat = , countries = , species = , tests = c("centroids", "gbif", "insitutions"))
 
 
 
