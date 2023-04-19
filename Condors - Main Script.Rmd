@@ -39,7 +39,7 @@ Summarize and email questions to Monika before the meetings.
 
 : Preliminary schedule
 
-## Week 1: Species Occurrence Data Download and Cleaning
+## Chunk 1: Species Occurrence Data Download
 
 Examine records from GBIF, remove erroneous entries and ones without geolocation, and duplicate records. Remove low-quality records (e.g.: based on spatial and temporal accuracy) and outliers (compare with range maps).
 
@@ -85,37 +85,6 @@ If there is time, familiarize yourself with environmental data (crop to the stud
 #The code above has been run, the files are stored in the repository, please don't run again but access the files directly (Manuel 6/4; 13:22)
 ############################################################################################
 
-
-<<<<<<< HEAD
-  # Extract essential columns
-  gbi_vg_crd <- gbi_vg_crd$data[,c("decimalLongitude", "decimalLatitude", 
-                             "coordinateUncertaintyInMeters", "occurrenceStatus")]
-  gbi_vg_crd$occurrenceStatus <- as.factor(gbi_vg_crd$occurrenceStatus)
-
-
-# Inspect output
-dim(gbi_vg_crd)
-summary(gbi_vg_crd)
-
-#We have 40'039 observations, of which 37'902 have no data about the coordinate precision.
-
-# Fraction of imprecise observations 
-tb_vg <- table(gbi_vg_crd$coordinateUncertaintyInMeters<=1000)
-round(as.numeric(tb_vg[1]/tb_vg), digits = 2)
-
-sum(gbi_vg_crd$coordinateUncertaintyInMeters < 1000)
-
-# Create SpatVector
-suppressPackageStartupMessages(library(dismo))
-ve_vg = vect(gbi_vg_ss,geom=c("decimalLongitude","decimalLatitude"),
-             crs="+init=epsg:4326")
-ve_vg = vect(gbi_vg_crd,geom=c("decimalLongitude","decimalLatitude"),
-             crs="+init=epsg:4326")
-
-# Plot the data
-plot(shape_ch, main = expression(paste(italic('Vultur gryphus'))), 
-     axes = FALSE, mar = c(.5,.5,1,.5))
-points(ve_vg, col = '#004D4050', pch = 16, cex = .8)
 ```
 
 #### SDM resources
@@ -130,18 +99,45 @@ For cleaning occurrence data (from the ENM 2020 course)
 
 -   'Occurrence data cleaning I (simple consistency checks)' -- main manual checks
 
-Some information about habitat and diet of the 3 focal species <https://avianreport.com/andean-condor-range-and-habitat/> <https://nationalzoo.si.edu/animals/andean-bear#:~:text=Andean%20bears%20live%20in%20a,forest%20to%20thorny%20dry%20forest.> <https://animalia.bio/south-american-cougar>
+Some information about habitat and diet of the 3 focal species
+
+-   <https://avianreport.com/andean-condor-range-and-habitat/>
+
+-   [https://nationalzoo.si.edu/animals/andean-bear#:\~:text=Andean%20bears%20live%20in%20a](https://nationalzoo.si.edu/animals/andean-bear#:~:text=Andean%20bears%20live%20in%20a,forest%20to%20thorny%20dry%20forest.){.uri}
+
+-   [forest%20to%20thorny%20dry%20forest.](https://nationalzoo.si.edu/animals/andean-bear#:~:text=Andean%20bears%20live%20in%20a,forest%20to%20thorny%20dry%20forest.){.uri} <https://animalia.bio/south-american-cougar>
+
+## Chunk 2: Species Occurrence Data Cleaning and Visualizing
 
 ```{r}
 # Cleaning, projecting and visualizing data
 # Loading packages
-lib_vect <- c("terra", "ranger", "ecospat", "dismo", "rworldmap")
+lib_vect <- c("terra", "ranger", "ecospat", "dismo", "rworldmap", "CoordinateCleaner")
 sapply(lib_vect,require,character.only=TRUE)
 
 # Read in data
 condor <- read.csv("Occurence data/gbi_vg.csv")
 puma <- read.csv("Occurence data/gbi_pc.csv")
 bear <- read.csv("Occurence data/gbi_to.csv")
+
+# Cleaning data
+# The sepecies infomration can be used to help identify duplicates. We can also identify other criteria to test for.
+coordinate_flags_condor <- clean_coordinates(x=condor, lon="decimalLongitude", lat="decimalLatitude", countries="countryCode", species="scientificName", tests= c("centroids","gbif","institutions","duplicates","seas","zeros"), verbose=T)
+
+coordinate_flags_puma <- clean_coordinates(x=puma, lon="decimalLongitude", lat="decimalLatitude", countries="countryCode", species="scientificName", tests= c("centroids","gbif","institutions","duplicates","seas","zeros"), verbose=T)
+
+coordinate_flags_bear <- clean_coordinates(x=bear, lon="decimalLongitude", lat="decimalLatitude", countries="countryCode", species="scientificName", tests= c("centroids","gbif","institutions","duplicates","seas","zeros"), verbose=T)
+
+# Add wheteher or not the points were flagged to the datafame
+condor$flags <- as.factor(coordinate_flags_condor$.summary)
+puma$flags <- as.factor(coordinate_flags_puma$.summary)
+bear$flags <- as.factor(coordinate_flags_bear$.summary)
+
+# Remove the problematic points
+condor <- subset(condor, condor$flags=="TRUE")
+puma <- subset(puma, puma$flags=="TRUE")
+bear <- subset(bear, bear$flags=="TRUE")
+
 
 
 # Extract essential columns
@@ -166,10 +162,10 @@ summary(gbi_to_crd)
 
 
 # Create SpatVector
-## We choose an area-conservative projection, namely Albers Equal Area, EPSG:9822
+## We choose an area-conservative projection, namely Albers Equal Area, esri:102033
 ## See also https://epsg.io/9822-method
 ve_vg = vect(gbi_vg_crd,geom=c("decimalLongitude","decimalLatitude"),
-             crs="+init=epsg:9822")
+             crs="+init=esri:102033")
 ve_pc = vect(gbi_pc_crd,geom=c("decimalLongitude","decimalLatitude"),
              crs="+init=epsg:9822")
 ve_to = vect(gbi_to_crd,geom=c("decimalLongitude","decimalLatitude"),
@@ -186,6 +182,118 @@ plot(ve_to, main = expression(paste(italic('Tremarctos ornatus'))), col = '#004D
 plot(coastsCoarse, add = T, col = "grey")}
 
 ## Next steps (Manuel): Mask water bodies, possibly crop the data to northern South America, acquire environmental data from worldclim, possibly disaggregate occurence data based on resolution of environmental rasters.
+
+
+
+# Crop data to northern South America
+gbi_vg_crd <- filter(gbi_vg_crd, decimalLatitude >= mean(condor$decimalLatitude))
+nrow(gbi_vg_crd)
+## 15506 observations left
+gbi_pc_crd <- filter(gbi_pc_crd, decimalLatitude >= mean(condor$decimalLatitude))
+nrow(gbi_pc_crd)
+## 2324 observations left
+gbi_to_crd <- filter(gbi_to_crd, decimalLatitude >= mean(condor$decimalLatitude))
+nrow(gbi_to_crd)
+## 7329 observations left
+
+
+# Extract relevant columns
+gbi_vg_crd <- condor[,c("decimalLongitude", "decimalLatitude", 
+                        "coordinateUncertaintyInMeters", "occurrenceStatus")]
+gbi_vg_crd$occurrenceStatus <- as.factor(gbi_vg_crd$occurrenceStatus)
+gbi_pc_crd <- puma[,c("decimalLongitude", "decimalLatitude", 
+                      "coordinateUncertaintyInMeters", "occurrenceStatus")]
+gbi_pc_crd$occurrenceStatus <- as.factor(gbi_pc_crd$occurrenceStatus)
+gbi_to_crd <- bear[,c("decimalLongitude", "decimalLatitude", 
+                      "coordinateUncertaintyInMeters", "occurrenceStatus")]
+gbi_to_crd$occurrenceStatus <- as.factor(gbi_to_crd$occurrenceStatus)
+
+sum(is.na(gbi_vg_crd$decimalLongitude),
+    is.na(gbi_vg_crd$decimalLatitude),
+    is.na(gbi_pc_crd$decimalLongitude),
+    is.na(gbi_pc_crd$decimalLatitude),
+    is.na(gbi_to_crd$decimalLongitude),
+    is.na(gbi_to_crd$decimalLatitude))
+
+# Inspect output
+dim(gbi_vg_crd) # 40039 observations for the condor
+summary(gbi_vg_crd)
+dim(gbi_pc_crd) # 3785 observations for the puma
+summary(gbi_pc_crd)
+dim(gbi_to_crd) # 7329 observations for the bear
+summary(gbi_to_crd)
+
+# Fraction of observations with no information on coordinate precision
+sna_vg <- length(which(is.na(gbi_vg_crd$coordinateUncertaintyInMeters)))
+sna_pc <- length(which(is.na(gbi_pc_crd$coordinateUncertaintyInMeters)))
+sna_to <- length(which(is.na(gbi_to_crd$coordinateUncertaintyInMeters)))
+
+round((sna_vg+sna_pc+sna_to)/(nrow(gbi_vg_crd)+nrow(gbi_pc_crd)+nrow(gbi_to_crd))*100, digits = 2)
+## 91% of the data doesn't contains no information at all about coordinate precision
+# Fraction of imprecise observations
+tb_vg <- table(gbi_vg_crd$coordinateUncertaintyInMeters<=100000)
+tb_pc <- table(gbi_pc_crd$coordinateUncertaintyInMeters<=100000)
+tb_to <- table(gbi_to_crd$coordinateUncertaintyInMeters<=100000)
+
+round(as.numeric((tb_vg[1]+tb_pc[1]+tb_to[1])/(sum(tb_vg)+sum(tb_pc)+sum(tb_to))*100), digits = 2)
+## 1.5% of the observations are less precise than 100 km
+
+tb_vg <- table(gbi_vg_crd$coordinateUncertaintyInMeters<=10000)
+tb_pc <- table(gbi_pc_crd$coordinateUncertaintyInMeters<=10000)
+tb_to <- table(gbi_to_crd$coordinateUncertaintyInMeters<=10000)
+
+round(as.numeric((tb_vg[1]+tb_pc[1]+tb_to[1])/(sum(tb_vg)+sum(tb_pc)+sum(tb_to))*100), digits = 2)
+## 63.4 % of the observations are less precise than 10 km
+
+tb_vg <- table(gbi_vg_crd$coordinateUncertaintyInMeters<=1000)
+tb_pc <- table(gbi_pc_crd$coordinateUncertaintyInMeters<=1000)
+tb_to <- table(gbi_to_crd$coordinateUncertaintyInMeters<=1000)
+
+round(as.numeric((tb_vg[1]+tb_pc[1]+tb_to[1])/(sum(tb_vg)+sum(tb_pc)+sum(tb_to))*100), digits = 2)
+## 71.8% of the observations are less precise than 1 km
+
+## Replacing NAs by value
+gbi_vg_crd[is.na(gbi_vg_crd)] <- -999
+gbi_pc_crd[is.na(gbi_pc_crd)] <- -999
+gbi_to_crd[is.na(gbi_to_crd)] <- -999
+
+
+
+# Visualizing the data
+## Create spatial vectors with the projection of interest (epsg:9822)
+### We choose an area-conservative projection, namely Albers Equal Area, EPSG:9822
+### See also https://epsg.io/9822-method
+
+## First we transform the decimal coordinates to northing/easting (projected coordinates)
+
+coordinates(gbi_vg_crd) <- c("decimalLongitude", "decimalLatitude")
+proj4string(gbi_vg_crd) <- CRS("+init=epsg:9822")
+gbi_vg_crd <- spTransform(gbi_vg_crd, CRS("+init=epsg:3857"))
+gbi_vg_crd <- as.data.frame(gbi_vg_crd)
+str(gbi_vg_crd)
+
+dem_reprojected <- project(dem, "epsg:9822") # it should be esri:102033
+
+crs(esri:102033)
+
+
+ve_vg = vect(gbi_vg_crd,geom=c("decimalLongitude","decimalLatitude"),
+             crs="+init=epsg:9822")
+ve_pc = vect(gbi_pc_crd,geom=c("decimalLongitude","decimalLatitude"),
+             crs="+init=epsg:9822")
+ve_to = vect(gbi_to_crd,geom=c("decimalLongitude","decimalLatitude"),
+             crs="+init=epsg:9822")
+
+data(coastsCoarse)
+par(mfrow = c(1,3))
+plot(ve_vg, main = expression(paste(italic('Vultur gryphus'))), col = '#004D4050', pch = 16, cex = .8, xlab = "Longitude", ylab = "Latitude")
+plot(coastsCoarse, add = T, col = "grey")
+abline(h = mean(condor$decimalLatitude), col = "red") # add line to show the scope of the study
+plot(ve_pc, main = expression(paste(italic('Puma concolor'))), col = '#004D4050', pch = 16, cex = .8, xlab = "Longitude", ylab = "Latitude")
+plot(coastsCoarse, add = T, col = "grey")
+abline(h = mean(condor$decimalLatitude), col = "red") # add line to show the scope of the study
+plot(ve_to, main = expression(paste(italic('Tremarctos ornatus'))), col = '#004D4050', pch = 16, cex = .8, xlab = "Longitude", ylab = "Latitude")
+plot(coastsCoarse, add = T, col = "grey")
 ```
 
 ## Week 2: Data Preparation
@@ -307,132 +415,7 @@ condor <- read.csv("C:/0_Documents/10_ETH/12_Mon 13-16_CHN E42_Landscape Modelli
 puma <- read.csv("C:/0_Documents/10_ETH/12_Mon 13-16_CHN E42_Landscape Modelling of Biodiversity/Project/Condor-Landscape-Modelling/Occurence data/gbi_pc.csv")
 bear <- read.csv("C:/0_Documents/10_ETH/12_Mon 13-16_CHN E42_Landscape Modelling of Biodiversity/Project/Condor-Landscape-Modelling/Occurence data/gbi_to.csv")
 
-# Cleaning data
-# # The sepecies infomration can be used to help identify duplicates. We can also identify other criteria to test for. 
-# coordinate_flags<-clean_coordinates(x=gbifdataframe, lon="decimalLongitude", lat="decimalLatitude",
-#                                     countries="countryCode",
-#                                     species="scientificName",
-#                                     tests= c("centroids","gbif","institutions","duplicates","seas","zeros"),
-#                                     verbose=T)
-# 
-# # Add wheteher or not the points were flagged to the datafame
-# gbifdataframe$flags<-as.factor(coordinate_flags$.summary)
-# # Remove those points that are non-problematic
-# gbifdataframe<-subset(gbifdataframe, gbifdataframe$flags=="TRUE")
-# 
-# # GBIF can sometimes include subspecies in their results. Let's make sure we only have species-level data.
-# gbifdataframe<-subset(gbifdataframe, gbifdataframe$taxonRank=="SPECIES")
-# # Taxonomy can often change, and multiple names may be accepted for a single species. Here we will choose 1 name- see the assignment for the species name to input here. 
-# gbifdataframe<-subset(gbifdataframe, gbifdataframe$scientificName=="Ranunculus marginatus d'Urv.")
 
-
-
-# Extract relevant columns
-gbi_vg_crd <- condor[,c("decimalLongitude", "decimalLatitude", 
-                        "coordinateUncertaintyInMeters", "occurrenceStatus")]
-gbi_vg_crd$occurrenceStatus <- as.factor(gbi_vg_crd$occurrenceStatus)
-gbi_pc_crd <- puma[,c("decimalLongitude", "decimalLatitude", 
-                      "coordinateUncertaintyInMeters", "occurrenceStatus")]
-gbi_pc_crd$occurrenceStatus <- as.factor(gbi_pc_crd$occurrenceStatus)
-gbi_to_crd <- bear[,c("decimalLongitude", "decimalLatitude", 
-                      "coordinateUncertaintyInMeters", "occurrenceStatus")]
-gbi_to_crd$occurrenceStatus <- as.factor(gbi_to_crd$occurrenceStatus)
-
-sum(is.na(gbi_vg_crd$decimalLongitude),
-    is.na(gbi_vg_crd$decimalLatitude),
-    is.na(gbi_pc_crd$decimalLongitude),
-    is.na(gbi_pc_crd$decimalLatitude),
-    is.na(gbi_to_crd$decimalLongitude),
-    is.na(gbi_to_crd$decimalLatitude))
-
-# Inspect output
-dim(gbi_vg_crd) # 40039 observations for the condor
-summary(gbi_vg_crd)
-dim(gbi_pc_crd) # 3785 observations for the puma
-summary(gbi_pc_crd)
-dim(gbi_to_crd) # 7329 observations for the bear
-summary(gbi_to_crd)
-
-# Fraction of observations with no information on coordinate precision
-sna_vg <- length(which(is.na(gbi_vg_crd$coordinateUncertaintyInMeters)))
-sna_pc <- length(which(is.na(gbi_pc_crd$coordinateUncertaintyInMeters)))
-sna_to <- length(which(is.na(gbi_to_crd$coordinateUncertaintyInMeters)))
-
-round((sna_vg+sna_pc+sna_to)/(nrow(gbi_vg_crd)+nrow(gbi_pc_crd)+nrow(gbi_to_crd))*100, digits = 2)
-## 91% of the data doesn't contains no information at all about coordinate precision
-# Fraction of imprecise observations
-tb_vg <- table(gbi_vg_crd$coordinateUncertaintyInMeters<=100000)
-tb_pc <- table(gbi_pc_crd$coordinateUncertaintyInMeters<=100000)
-tb_to <- table(gbi_to_crd$coordinateUncertaintyInMeters<=100000)
-
-round(as.numeric((tb_vg[1]+tb_pc[1]+tb_to[1])/(sum(tb_vg)+sum(tb_pc)+sum(tb_to))*100), digits = 2)
-## 1.5% of the observations are less precise than 100 km
-
-tb_vg <- table(gbi_vg_crd$coordinateUncertaintyInMeters<=10000)
-tb_pc <- table(gbi_pc_crd$coordinateUncertaintyInMeters<=10000)
-tb_to <- table(gbi_to_crd$coordinateUncertaintyInMeters<=10000)
-
-round(as.numeric((tb_vg[1]+tb_pc[1]+tb_to[1])/(sum(tb_vg)+sum(tb_pc)+sum(tb_to))*100), digits = 2)
-## 63.4 % of the observations are less precise than 10 km
-
-tb_vg <- table(gbi_vg_crd$coordinateUncertaintyInMeters<=1000)
-tb_pc <- table(gbi_pc_crd$coordinateUncertaintyInMeters<=1000)
-tb_to <- table(gbi_to_crd$coordinateUncertaintyInMeters<=1000)
-
-round(as.numeric((tb_vg[1]+tb_pc[1]+tb_to[1])/(sum(tb_vg)+sum(tb_pc)+sum(tb_to))*100), digits = 2)
-## 71.8% of the observations are less precise than 1 km
-
-## Replacing NAs by value
-gbi_vg_crd[is.na(gbi_vg_crd)] <- -999
-gbi_pc_crd[is.na(gbi_pc_crd)] <- -999
-gbi_to_crd[is.na(gbi_to_crd)] <- -999
-
-# Crop data to northern South America
-gbi_vg_crd <- filter(gbi_vg_crd, decimalLatitude >= mean(condor$decimalLatitude))
-nrow(gbi_vg_crd)
-## 15506 observations left
-gbi_pc_crd <- filter(gbi_pc_crd, decimalLatitude >= mean(condor$decimalLatitude))
-nrow(gbi_pc_crd)
-## 2324 observations left
-gbi_to_crd <- filter(gbi_to_crd, decimalLatitude >= mean(condor$decimalLatitude))
-nrow(gbi_to_crd)
-## 7329 observations left
-
-# Visualizing the data
-## Create spatial vectors with the projection of interest (epsg:9822)
-### We choose an area-conservative projection, namely Albers Equal Area, EPSG:9822
-### See also https://epsg.io/9822-method
-
-## First we transform the decimal coordinates to northing/easting (projected coordinates)
-
-coordinates(gbi_vg_crd) <- c("decimalLongitude", "decimalLatitude")
-proj4string(gbi_vg_crd) <- CRS("+init=epsg:9822")
-gbi_vg_crd <- spTransform(gbi_vg_crd, CRS("+init=epsg:3857"))
-gbi_vg_crd <- as.data.frame(gbi_vg_crd)
-str(gbi_vg_crd)
-
-dem_reprojected <- project(dem, "epsg:9822") # it should be esri:102033
-
-crs(esri:102033)
-
-
-ve_vg = vect(gbi_vg_crd,geom=c("decimalLongitude","decimalLatitude"),
-             crs="+init=epsg:9822")
-ve_pc = vect(gbi_pc_crd,geom=c("decimalLongitude","decimalLatitude"),
-             crs="+init=epsg:9822")
-ve_to = vect(gbi_to_crd,geom=c("decimalLongitude","decimalLatitude"),
-             crs="+init=epsg:9822")
-
-data(coastsCoarse)
-par(mfrow = c(1,3))
-plot(ve_vg, main = expression(paste(italic('Vultur gryphus'))), col = '#004D4050', pch = 16, cex = .8, xlab = "Longitude", ylab = "Latitude")
-plot(coastsCoarse, add = T, col = "grey")
-abline(h = mean(condor$decimalLatitude), col = "red") # add line to show the scope of the study
-plot(ve_pc, main = expression(paste(italic('Puma concolor'))), col = '#004D4050', pch = 16, cex = .8, xlab = "Longitude", ylab = "Latitude")
-plot(coastsCoarse, add = T, col = "grey")
-abline(h = mean(condor$decimalLatitude), col = "red") # add line to show the scope of the study
-plot(ve_to, main = expression(paste(italic('Tremarctos ornatus'))), col = '#004D4050', pch = 16, cex = .8, xlab = "Longitude", ylab = "Latitude")
-plot(coastsCoarse, add = T, col = "grey")
 
 # Mask water bodies - IMPOSSIBLE DUE TO INCOMPATIBLE RESOLUTION
 # ## First, create the dataframes to wgs84 spatial vectors (the water bodies are in wgs84)
@@ -458,7 +441,7 @@ dem_reprojected <- projectRaster(dem, crs='+proj=longlat +datum=WGS84')
 crs(dem_reprojected) == crs(ve_vg)
 
 
-## use max of stream importance for raster
+## use max of stream importance for rasterizing it
 
 
 dem_reprojected <- dem
@@ -494,11 +477,8 @@ hist(sam_int_to, breaks = 100, xlab = "counts",
 
 
 
-clean_coordinates(x = gbifdata, lon = , lat = , countries = , species = , tests = c("centroids, "gbif, "insitutions"))
+clean_coordinates(x = gbifdata, lon = , lat = , countries = , species = , tests = c("centroids", "gbif", "insitutions"))
 
 
-??coords2continent
-install.packages("coords2country")
-coords2continent(-23,8)
 
 ```
