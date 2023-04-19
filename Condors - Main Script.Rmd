@@ -195,6 +195,26 @@ tb_to <- table(gbi_to_crd$coordinateUncertaintyInMeters<=1000)
 round(as.numeric((tb_vg[1]+tb_pc[1]+tb_to[1])/(sum(tb_vg)+sum(tb_pc)+sum(tb_to))*100), digits = 2)
 ## 71.5% of the observations are less precise than 1 km
 
+library(coastsCoarse)
+# Transforming the occurence data to Albers Equal Area ESRI:102033, using the DEM as template
+dem <- rast("Rasters/DEM.tif")
+
+coordinates(gbi_vg_crd) <- c("decimalLongitude", "decimalLatitude")
+coordinates(gbi_pc_crd) <- c("decimalLongitude", "decimalLatitude")
+coordinates(gbi_to_crd) <- c("decimalLongitude", "decimalLatitude")
+
+raster::crs(gbi_vg_crd) <-  'EPSG:4326'
+raster::crs(gbi_pc_crd) <-  'EPSG:4326'
+raster::crs(gbi_to_crd) <-  'EPSG:4326' ### we first need to set the crs before being able to transform it
+
+gbi_vg_crd <- spTransform(gbi_vg_crd, CRS(terra::crs(dem)))
+gbi_pc_crd <- spTransform(gbi_pc_crd, CRS(terra::crs(dem)))
+gbi_to_crd <- spTransform(gbi_to_crd, CRS(terra::crs(dem)))
+
+gbi_vg_crd <- as.data.frame(gbi_vg_crd)
+gbi_pc_crd <- as.data.frame(gbi_pc_crd)
+gbi_to_crd <- as.data.frame(gbi_to_crd)
+
 # Saving the preprocessed data (we should overwrite these files later after transforming the coordinates to esri:102033)
 write.csv(gbi_vg_crd, "Occurence data/condor_final.csv")
 write.csv(gbi_pc_crd, "Occurence data/puma_final.csv")
@@ -202,11 +222,6 @@ write.csv(gbi_to_crd, "Occurence data/bear_final.csv")
 
 # Visualizing the data
 ## Create spatial vectors with the projection of interest (esri:102033)
-### We choose an area-conservative projection, namely Albers Equal Area, esri:102033
-### See also https://epsg.io/
-
-dem <- rast("Rasters/DEM.tif")
-crs(dem)
 
 ve_vg = vect(gbi_vg_crd,geom=c("decimalLongitude","decimalLatitude"),
              crs=crs(dem))
@@ -226,6 +241,8 @@ abline(h = mean(condor$decimalLatitude), col = "red") # add line to show the sco
 plot(ve_to, main = expression(paste(italic('Tremarctos ornatus'))), col = '#004D4050', pch = 16, cex = .8, xlab = "Longitude", ylab = "Latitude")
 plot(coastsCoarse, add = T, col = "grey")}
 ```
+
+dem_reprojected \<- terra::project(x = dem, y = "ESRI:102033", method = "near")
 
 ## Week 2: Data Preparation
 
