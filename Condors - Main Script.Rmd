@@ -26,7 +26,7 @@ Weekly meetings on Tuesdays at 4:15 PM on the green floor in CHN or in F77 (no m
 Summarize and email questions to Monika before the meetings.
 
 | Date        | Progress Milestone                                                                          | Suggested Focus                                                     |
-|------------------|-------------------------------|-----------------------|
+|-------------|---------------------------------------------------------------------------------------------|---------------------------------------------------------------------|
 | 03.04-07.04 | Species occurrence data downloaded and cleaned                                              | Data retrieval and cleaning                                         |
 | 10.04-14.05 | Environmental data prepared for model fitting                                               | Environmental exploration                                           |
 | 17.04-21.04 | 1.Initial set of predictors selected 2.Created 1st set of PAs (e.g.: random)                | Environmental predictors ; Pseudoabsence creation (PAs)             |
@@ -107,7 +107,7 @@ Some information about habitat and diet of the 3 focal species
 
 -   [forest%20to%20thorny%20dry%20forest.](https://nationalzoo.si.edu/animals/andean-bear#:~:text=Andean%20bears%20live%20in%20a,forest%20to%20thorny%20dry%20forest.){.uri} <https://animalia.bio/south-american-cougar>
 
-## Chunk 2: Species Occurrence Data Cleaning and Visualizing
+## Chunk 2: Species Occurrence Data Cleaning, Thinning and Visualizing
 
 The occurence data will be cleaned, cropped to northern South America and reprojected to ESRI:102033.
 
@@ -271,33 +271,15 @@ The occurence data will be cleaned, cropped to northern South America and reproj
 
 ```
 
+Code for reprojection:
+
 dem_reprojected \<- terra::project(x = dem, y = "ESRI:102033", method = "near")
 
-## Chunk 3: Thinning data and pseudo-absences
+## Chunk 3: Pseudo-absences
 
 ```{r}
 # Reading in data
-condor <- read.csv("Occurence data/condor_final.csv")
-puma <- read.csv("Occurence data/puma_final.csv")
-bear <- read.csv("Occurence data/bear_final.csv")
 
-dem <- terra::rast("Rasters/DEM.tif")
-
-# Count how many points fall into each pixel of the dem raster
-crs(condor) <- "ESRI:102033"
-condor <- raster::coordinates(c("decimalLongitude", "decimalLatitude"))
-condor_raster <- terra::rasterize(condor, dem, fun = "length")
-sam_int_nc <- rasterize(ch_nc, environmental_predictors, fun = "length")
-
-## Plot histograms
-par(mfrow = c(1,2))
-# Nutcracker
-hist(sam_int_nc, breaks = 100, xlab = "counts",
-     main = expression(paste(italic('Nucifraga caryocatactes'))))
-
-# Kingfisher
-hist(sam_int_aa, breaks = 100, main = expression(paste(italic('Alcedo atthis'))), 
-     xlab = "counts")
 ```
 
 ## Chunk 4: Predictor Acquisition and Preprocessing
@@ -343,10 +325,6 @@ We choose to use an area-conservative projection: Albers equal area conic projec
 ############################################################################################
 #The code above has been run, the files are stored in the repository, please don't run again but access the files directly (Manuel 13/4; 17:47)
 ############################################################################################
-
-# I uploaded the following rasters to the repository:
-# DEM, tree cover, canopy height, slope, aspect
-# Still missing: Rivers, population density, bioclimatic variables
 
 #insert Rasters
 
