@@ -57,7 +57,7 @@ Some information about habitat and diet of the 3 focal species
 
 -   [forest%20to%20thorny%20dry%20forest.](https://nationalzoo.si.edu/animals/andean-bear#:~:text=Andean%20bears%20live%20in%20a,forest%20to%20thorny%20dry%20forest.){.uri} <https://animalia.bio/south-american-cougar>
 
-## Chunk 1: Species Occurrence Data Download (Manuel)
+## Chunk 1: Species Occurrence Data Acquisition (Manuel)
 
 This chunk acquires occurrence data of the Andean Condor, the Puma and the Andean Bear from GBIF. The data is limited to geo-referenced data points from South America, recorded between 2000 and 2023. The raw data is saved in the repository in the folder "Occurrence data" under "gbi\_*species abbreviation*.csv".
 
@@ -103,7 +103,7 @@ This chunk acquires occurrence data of the Andean Condor, the Puma and the Andea
 
 ```
 
-## Chunk 2: Species Occurrence Data Cleaning, Thinning and Visualizing (Manuel)
+## Chunk 2: Species Occurrence Data Cleaning and Thinning (Manuel)
 
 The following chunk cleans the data ( among others: removal of duplicates, zeros, points referenced to seas or research institutions). It proceeds by extracting essential columns (coordinates, uncertainties and occurrence status) and cropping the data to northern South America, by using the mean latitude of the condor occurrence data as cut-off line. The uncertainty of the cleaned data was then quantified as follows:
 
@@ -307,9 +307,11 @@ rnd$Presence <- 0
 plot(dem_cropped)
 points(rnd)
 write.csv(rnd, "Pseudo absences/pseudo absences random.csv")
+
+
 ```
 
-## Chunk 4: Predictor Acquisition and Preprocessing
+## Chunk 4: Predictor Acquisition and Pre-processing (Justine & Tanja)
 
 Goal: selecting, cropping, reprojecting, and aligning rasters.
 
@@ -325,7 +327,7 @@ Rasters to consider:
 
 -   Population density
 
--   Distance to water
+-   Distance to water (generated from water bodies (lakes + rivers))
 
 -   Landscape openness
 
