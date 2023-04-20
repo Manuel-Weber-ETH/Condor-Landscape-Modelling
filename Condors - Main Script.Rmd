@@ -118,7 +118,7 @@ Although most of the referenced data had uncertainties superior to 10 km, we dec
 
 The data is thinned so that individual data points are spaced by at least 1 km. The obtained data-sets contain only coordinates and occurrence stati and are saved in the repository in the folder "Occurrence data" under "*species*\_presences_1km.csv". Finally, the data is visualized in a basic plot:
 
-![Basic distribution maps of the cleaned data](distribution%20maps%20basic.jpeg)
+![](Visualizations/distribution%20maps%20basic.jpeg)
 
 ```{r}
 # # Cleaning, projecting and visualizing data
