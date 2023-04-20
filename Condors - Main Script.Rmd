@@ -278,8 +278,35 @@ The data is thinned so that individual data points are spaced by at least 1 km. 
 ## Chunk 3: Generating Pseudo-absences (Manuel)
 
 ```{r}
-# Reading in data
+# Generating Pseudo-absences
 
+#1# Random
+# Loading packages
+lib_vect <- c("terra", "ranger", "ecospat", "dismo", "rworldmap", "CoordinateCleaner", "dplyr")
+sapply(lib_vect,require,character.only=TRUE)
+
+# We use the DEM as template and environmental stratification a bit later. First we need to crop the DEM to the study area.
+dem <- rast("Rasters/DEM.tif")
+library(sf)
+area <- read_sf("Study area shapefile/study area shapefile.shp")
+area <- area[1]
+dem_cropped <- crop(dem, area)
+dem_cropped <- mask(dem_cropped, area)
+plot(dem_cropped)
+
+# Sample randomly 10k pseudo-absences
+rnd <- spatSample(dem_cropped, 10000, method = "random", na.rm = TRUE,
+                  as.df = TRUE, xy = TRUE)
+# Remove NAs
+rnd  <- na.omit(rnd)
+
+# Add absence information
+rnd$Presence <- 0
+
+# Visualize
+plot(dem_cropped)
+points(rnd)
+write.csv(rnd, "Pseudo absences/pseudo absences random.csv")
 ```
 
 ## Chunk 4: Predictor Acquisition and Preprocessing
@@ -311,6 +338,8 @@ Environmental or spatial stratification of pseudo-absences
 We start with random pseudo-absences
 
 We choose to use an area-conservative projection: Albers equal area conic projection (epsg.io)
+
+We will crop all layers to the study area (shapefile located in the folder study area shapefile)
 
 ```{r}
 # Generating slope and aspect from DEM:
