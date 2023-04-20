@@ -231,7 +231,7 @@ The occurence data will be cleaned, cropped to northern South America and reproj
 #              crs=crs(dem))
 # ve_to = vect(gbi_to_crd,geom=c("decimalLongitude","decimalLatitude"),
 #              crs=crs(dem))
-# 
+#
 # data(coastsCoarse)
 # raster::crs(coastsCoarse) <- "EPSG:4326"
 # coastsCoarse <- spTransform(coastsCoarse, CRS(terra::crs(dem)))
@@ -244,15 +244,63 @@ The occurence data will be cleaned, cropped to northern South America and reproj
 # plot(ve_to, main = expression(paste(italic('Tremarctos ornatus'))), col = '#004D4050', pch = 16, cex = .8, xlab = "Longitude", ylab = "Latitude")
 # plot(coastsCoarse, add = T, col = "grey")}
 
+# Finally we thin the data, so that only one presence is kept per raster cell of 1x1 km (the DEM serves as template)
+
+# condor_raster <- rasterize(ve_vg, dem, fun = "length")
+# puma_raster <- rasterize(ve_pc, dem, fun = "length")
+# bear_raster <- rasterize(ve_to, dem, fun = "length")
+
+# condor_pres <- crds(condor_raster)
+# puma_pres <- crds(puma_raster)
+# bear_pres <- crds(bear_raster)
+
+# condor_pres <- as.data.frame(condor_pres)
+# condor_pres$Presence <- rep(1, nrow(condor_pres))
+# puma_pres <- as.data.frame(puma_pres)
+# puma_pres$Presence <- rep(1, nrow(puma_pres))
+# bear_pres <- as.data.frame(bear_pres)
+# bear_pres$Presence <- rep(1, nrow(bear_pres))
+
+# write.csv(condor_pres, "Occurence data/condor_presences_1km.csv")
+# write.csv(puma_pres, "Occurence data/puma_presences_1km.csv")
+# write.csv(bear_pres, "Occurence data/bear_presences_1km.csv")
+
 ############################################################################################
-#The code above has been run, the files are stored in the repository, please don't run again but access the files directly (Manuel 19/4; 21:22)
+#The code above has been run, the files are stored in the repository, please don't run again but access the files directly (Manuel 20/4; 13:45)
 ############################################################################################
 
 ```
 
 dem_reprojected \<- terra::project(x = dem, y = "ESRI:102033", method = "near")
 
-## Chunk 3: Predictor Acquisition
+## Chunk 3: Thinning data and pseudo-absences
+
+```{r}
+# Reading in data
+condor <- read.csv("Occurence data/condor_final.csv")
+puma <- read.csv("Occurence data/puma_final.csv")
+bear <- read.csv("Occurence data/bear_final.csv")
+
+dem <- terra::rast("Rasters/DEM.tif")
+
+# Count how many points fall into each pixel of the dem raster
+crs(condor) <- "ESRI:102033"
+condor <- raster::coordinates(c("decimalLongitude", "decimalLatitude"))
+condor_raster <- terra::rasterize(condor, dem, fun = "length")
+sam_int_nc <- rasterize(ch_nc, environmental_predictors, fun = "length")
+
+## Plot histograms
+par(mfrow = c(1,2))
+# Nutcracker
+hist(sam_int_nc, breaks = 100, xlab = "counts",
+     main = expression(paste(italic('Nucifraga caryocatactes'))))
+
+# Kingfisher
+hist(sam_int_aa, breaks = 100, main = expression(paste(italic('Alcedo atthis'))), 
+     xlab = "counts")
+```
+
+## Chunk 4: Predictor Acquisition and Preprocessing
 
 Goal: selecting, cropping, reprojecting, and aligning rasters.
 
@@ -432,3 +480,7 @@ hist(sam_int_to, breaks = 100, xlab = "counts",
 
 
 ```
+
+Extracting environmental conditions for presences and absences:
+
+    df_pres_aa <- cbind(extract(environmental_predictors,crd_aa_thin), crd_aa_thin)
