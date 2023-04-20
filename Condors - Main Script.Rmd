@@ -277,6 +277,10 @@ The data is thinned so that individual data points are spaced by at least 1 km. 
 
 ## Chunk 3: Generating Pseudo-absences (Manuel)
 
+The following chunk produces a set of random pseudo-absences. The data is stored in the Pseudo absences folder.
+
+![](Visualizations/pseudo%20absences%20random.jpeg)
+
 ```{r}
 # Generating Pseudo-absences
 
@@ -304,8 +308,8 @@ rnd  <- na.omit(rnd)
 rnd$Presence <- 0
 
 # Visualize
-plot(dem_cropped)
-points(rnd)
+{plot(dem_cropped, main = "Pseudo Absences: Random (DEM)")
+points(rnd, cex = 0.1)}
 write.csv(rnd, "Pseudo absences/pseudo absences random.csv")
 
 
