@@ -24,7 +24,7 @@ Weekly meetings on Tuesdays at 4:15 PM on the green floor in CHN or in F77 (no m
 Summarize and email questions to Monika before the meetings.
 
 | Date        | Progress Milestone                                                                          | Suggested Focus                                                     |
-|--------------|----------------------------------|------------------------|
+|-----------------|--------------------------------|-----------------------|
 | 03.04-07.04 | Species occurrence data downloaded and cleaned                                              | Data retrieval and cleaning                                         |
 | 10.04-14.05 | Environmental data prepared for model fitting                                               | Environmental exploration                                           |
 | 17.04-21.04 | 1.Initial set of predictors selected 2.Created 1st set of PAs (e.g.: random)                | Environmental predictors ; Pseudoabsence creation (PAs)             |
@@ -279,39 +279,206 @@ The data is thinned so that individual data points are spaced by at least 1 km. 
 
 The following chunk produces a set of random pseudo-absences. The data is stored in the Pseudo absences folder.
 
+Generating geographically stratified pseudo-absences entailed to aggregate the 1x1km resolution DEM to a 10x10km resolution to keep computing times practicable. Furthermore, the stratification of the topography was implemented in classes of 100 meters.
+
 ![](Visualizations/pseudo%20absences%20random.jpeg)
 
+![](Visualizations/pseudo%20absences%20stratified.jpeg)
+
+![](Visualizations/pseudo%20absences%20geographically%20weighed.jpeg)
+
 ```{r}
-# Generating Pseudo-absences
+# # Generating Pseudo-absences
+# 
+# # Random ######################################################################
+# # Loading packages
+# lib_vect <- c("terra", "ranger", "ecospat", "dismo", "rworldmap", "CoordinateCleaner", "dplyr")
+# sapply(lib_vect,require,character.only=TRUE)
+# 
+# # We use the DEM as template and environmental stratification a bit later. First we need to crop the DEM to the study area.
+# dem <- rast("Rasters/DEM.tif")
+# library(sf)
+# area <- read_sf("Study area shapefile/study area shapefile.shp")
+# area <- area[1]
+# dem_cropped <- crop(dem, area)
+# dem_cropped <- mask(dem_cropped, area)
+# plot(dem_cropped)
+# 
+# # Sample randomly 10k pseudo-absences
+# rnd <- spatSample(dem_cropped, 10000, method = "random", na.rm = TRUE,
+#                   as.df = TRUE, xy = TRUE)
+# # Remove NAs
+# rnd  <- na.omit(rnd)
+# 
+# # Add absence information
+# rnd$Presence <- 0
+# 
+# # Visualize
+# {plot(dem_cropped, main = "Pseudo Absences: Random (DEM)")
+# points(rnd, cex = 0.1)}
+# write.csv(rnd, "Pseudo absences/pseudo absences random.csv")
+# 
+# # Environmentally stratified #############################################################
+# 
+# ## We'll use the DEM as stratifier
+# 
+# library(terra)
+# dem <- rast("Rasters/DEM.tif")
+# library(sf)
+# area <- read_sf("Study area shapefile/study area shapefile.shp")
+# area <- area[1]
+# dem_cropped <- crop(dem, area)
+# dem_cropped <- mask(dem_cropped, area)
+# plot(dem_cropped)
+# 
+# 
+# 
+# dem_df <- as.data.frame(dem, xy = T, na.rm = T)
+# dem_df$elevation <- round(dem_df$elevation, digits = -3)
+# length(unique(dem_df$elevation))
+# dem_rounded <- rast(dem_df)
+# dem_rounded_cropped <- crop(dem_rounded, area)
+# dem_rounded_cropped <- mask(dem_rounded_cropped, area)
+# plot(dem_rounded_cropped)
+# strat <- spatSample(dem_rounded_cropped, 10000, method = "stratified", na.rm = TRUE,
+#                     as.df = TRUE, xy = TRUE, replace = T)
+# 
+# # Remove NAs
+# strat  <- na.omit(strat)
+# 
+# # Add absence information
+# strat$Presence <- 0
+# 
+# 
+# {plot(dem_rounded_cropped, main = "Pseudo Absences: Stratified (DEM)")
+#   points(strat, cex = 0.1)}
+# write.csv(rnd, "Pseudo absences/pseudo absences stratified elevation.csv")
+# 
+# 
+# 
+# # Geographic weighting ##################################################################
+# 
+# # Load dismo package
+# suppressPackageStartupMessages(library(dismo))
+# 
+# # Reading in occurrence data
+# condor <- read.csv("Occurrence data/condor_presences_1km.csv")
+# puma <- read.csv("Occurrence data/puma_presences_1km.csv")
+# bear <- read.csv("Occurrence data/bear_presences_1km.csv")
+# 
+# 
+# # First, sample a regular grid of absence points (as many points as presence observations)
+# reg_sam_condor <- spatSample(dem_cropped, nrow(condor), xy = TRUE, 
+#                          method = "regular", na.rm = TRUE, as.df = TRUE)
+# reg_sam_puma <- spatSample(dem_cropped, nrow(puma), xy = TRUE,
+#                          method = "regular", na.rm = TRUE, as.df = TRUE)
+# reg_sam_bear <- spatSample(dem_cropped, nrow(bear), xy = TRUE,
+#                            method = "regular", na.rm = TRUE, as.df = TRUE)
+# 
+# points(reg_sam_bear)
+# # Fit IDW models
+# mod_idw_condor <- geoIDW(p = as.data.frame(condor[,c("x","y")]),
+#                      a = reg_sam_condor[,c("x","y")])
+# 
+# mod_idw_puma <- geoIDW(p = as.data.frame(puma[,c("x","y")]),
+#                      a = reg_sam_puma[,c("x","y")])
+# 
+# mod_idw_bear <- geoIDW(p = as.data.frame(bear[,c("x","y")]),
+#                      a = reg_sam_bear[,c("x","y")])
+# 
+# 
+# # predicting the values requires a raster layer (not a spatraster layer)
+# dem <- raster::raster("Rasters/DEM.tif")
+# dem_cropped_raster <- crop(dem, area)
+# dem_cropped_raster <- raster::aggregate(dem_cropped_raster, fact = 10)
+# dem_cropped_raster <- mask(dem_cropped_raster, area)
+# plot(dem_cropped_raster)
+# 
+# # We change the resolution from 1 to 10 km, otherwise it takes too long
+# 
+# # Predict test run
+# prd_idw_condor <- raster::predict(object = dem_cropped_raster, model = mod_idw_condor, mask = TRUE)
+# prd_idw_puma <- raster::predict(object = dem_cropped_raster, model = mod_idw_puma, mask = TRUE)
+# prd_idw_bear <- raster::predict(object = dem_cropped_raster, model = mod_idw_bear, mask = TRUE)
+# 
+# # Define lists to store replicates of idw predictons
+# idw_condor <- idw_puma <- idw_bear <- list()
+# # Repeat ten times
+# for(i in 1:5){
+#   
+#   # Refit idw model on jittered absences
+#   mod_idw_condor <- geoIDW(p = as.data.frame(condor[,c("x","y")]),
+#                        a = as.data.frame(apply(reg_sam_condor[,c("x","y")],2, jitter, 
+#                                                factor = 3)))
+#   
+#   mod_idw_puma <- geoIDW(p = as.data.frame(puma[,c("x","y")]),
+#                        a = as.data.frame(apply(reg_sam_puma[,c("x","y")],2, jitter, 
+#                                                factor = 3)))
+#   
+#   mod_idw_bear <- geoIDW(p = as.data.frame(bear[,c("x","y")]),
+#                        a = as.data.frame(apply(reg_sam_bear[,c("x","y")],2, jitter, 
+#                                                factor = 3)))
+#   # Predict
+#   idw_condor[[i]] <- predict(dem_cropped_raster, mod_idw_condor, mask = TRUE)
+#   idw_puma[[i]] <- predict(dem_cropped_raster, mod_idw_puma, mask = TRUE)
+#   idw_bear[[i]] <- predict(dem_cropped_raster, mod_idw_bear, mask = TRUE)
+# }
+# 
+# # Average across the ten replicates
+# prdj_idw_condor <- mean(stack(idw_condor))
+# prdj_idw_puma <- mean(stack(idw_puma))
+# prdj_idw_bear <- mean(stack(idw_bear))
+# 
+# # Convert rasters to data.frames
+# df_idw_condor <- as.data.frame(as(prdj_idw_condor, "SpatialPixelsDataFrame"))
+# df_idw_puma <- as.data.frame(as(prdj_idw_puma, "SpatialPixelsDataFrame"))
+# df_idw_bear <- as.data.frame(as(prdj_idw_bear, "SpatialPixelsDataFrame"))
+# 
+# # Detach raster package (so it does not interfere with terra)
+# detach("package:dismo")
+# detach("package:raster")
+# 
+# # Sample according to derived probabliity
+# smp_condor <- sample(1:nrow(df_idw_condor), size = 10000, prob = df_idw_condor$layer)
+# smp_puma <- sample(1:nrow(df_idw_puma), size = 10000, prob = df_idw_puma$layer)
+# smp_bear <- sample(1:nrow(df_idw_bear), size = 10000, prob = df_idw_bear$layer)
+# 
+# # Prepare coordinates for extraction
+# crd_geo_condor <- as.matrix(df_idw_condor[smp_condor, c("x", "y")])
+# crd_geo_puma <- as.matrix(df_idw_puma[smp_puma, c("x", "y")])
+# crd_geo_bear <- as.matrix(df_idw_bear[smp_bear, c("x", "y")])
+# 
+# # Extract environmental conditons at sampling locations
+# geo_condor <- cbind(extract(dem_cropped, crd_geo_condor), crd_geo_condor)
+# geo_puma <- cbind(extract(dem_cropped, crd_geo_puma), crd_geo_puma)
+# geo_bear <- cbind(extract(dem_cropped, crd_geo_bear), crd_geo_bear)
+# 
+# # Remove NAs
+# geo_condor <- na.omit(geo_condor)
+# geo_puma <- na.omit(geo_puma)
+# geo_bear <- na.omit(geo_bear)
+# 
+# # Add presence/absence information
+# geo_condor$Presence <- 0
+# geo_puma$Presence <- 0
+# geo_bear$Presence <- 0
+# 
+# {par(mfrow = c(2,3))
+# plot(dem_cropped, main = "Pseudo Absences Condor: Geographically weighed (DEM)")
+# points(geo_condor[,c("x","y")], cex = 0.1)
+# plot(dem_cropped, main = "Pseudo Absences Puma: Geographically weighed (DEM)")
+# points(geo_puma[,c("x","y")], cex = 0.1)
+# plot(dem_cropped, main = "Pseudo Absences Andean Bear: Geographically weighed (DEM)")
+# points(geo_bear[,c("x","y")], cex = 0.1)}
+# 
+# 
+# write.csv(geo_condor, "Pseudo absences/pseudo absences geographically weighed condor.csv")
+# write.csv(geo_puma, "Pseudo absences/pseudo absences geographically weighed puma.csv")
+# write.csv(geo_bear, "Pseudo absences/pseudo absences geographically weighed bear.csv")
 
-#1# Random
-# Loading packages
-lib_vect <- c("terra", "ranger", "ecospat", "dismo", "rworldmap", "CoordinateCleaner", "dplyr")
-sapply(lib_vect,require,character.only=TRUE)
-
-# We use the DEM as template and environmental stratification a bit later. First we need to crop the DEM to the study area.
-dem <- rast("Rasters/DEM.tif")
-library(sf)
-area <- read_sf("Study area shapefile/study area shapefile.shp")
-area <- area[1]
-dem_cropped <- crop(dem, area)
-dem_cropped <- mask(dem_cropped, area)
-plot(dem_cropped)
-
-# Sample randomly 10k pseudo-absences
-rnd <- spatSample(dem_cropped, 10000, method = "random", na.rm = TRUE,
-                  as.df = TRUE, xy = TRUE)
-# Remove NAs
-rnd  <- na.omit(rnd)
-
-# Add absence information
-rnd$Presence <- 0
-
-# Visualize
-{plot(dem_cropped, main = "Pseudo Absences: Random (DEM)")
-points(rnd, cex = 0.1)}
-write.csv(rnd, "Pseudo absences/pseudo absences random.csv")
-
+############################################################################################
+#The code above has been run, the files are stored in the repository, please don't run again but access the files directly (Manuel 23/4; 16:10)
+############################################################################################
 
 ```
 
