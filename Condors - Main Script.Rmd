@@ -13,9 +13,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Main Script
 
-##### Students: Justine DeGroote, Tanja Falasca, Manuel Weber
+Students: Justine DeGroote, Tanja Falasca, Manuel Weber
 
-##### Supervisor: Monika K. Goralczyk
+Supervisor: Monika K. Goralczyk
 
 ## Organization
 
@@ -24,7 +24,7 @@ Weekly meetings on Tuesdays at 4:15 PM on the green floor in CHN or in F77 (no m
 Summarize and email questions to Monika before the meetings.
 
 | Date        | Progress Milestone                                                                          | Suggested Focus                                                     |
-|-----------------|--------------------------------|-----------------------|
+|------------------|-------------------------------|-----------------------|
 | 03.04-07.04 | Species occurrence data downloaded and cleaned                                              | Data retrieval and cleaning                                         |
 | 10.04-14.05 | Environmental data prepared for model fitting                                               | Environmental exploration                                           |
 | 17.04-21.04 | 1.Initial set of predictors selected 2.Created 1st set of PAs (e.g.: random)                | Environmental predictors ; Pseudoabsence creation (PAs)             |
@@ -277,13 +277,17 @@ The data is thinned so that individual data points are spaced by at least 1 km. 
 
 ## Chunk 3: Generating Pseudo-absences (Manuel)
 
-The following chunk produces a set of random pseudo-absences. The data is stored in the Pseudo absences folder.
+The following chunk produces three sets of pseudo-absences. The data is stored in the "Pseudo absences" folder under "pseudo absences *type species*.csv".
 
-Generating geographically stratified pseudo-absences entailed to aggregate the 1x1km resolution DEM to a 10x10km resolution to keep computing times practicable. Furthermore, the stratification of the topography was implemented in classes of 100 meters.
+First, a set of 10 000 spatially random pseudo absences is generated and visualized as follows:
 
 ![](Visualizations/pseudo%20absences%20random.jpeg)
 
+Next, 10 000 geographically stratified pseudo-absences are generated. This entails to aggregate the 1x1km resolution DEM to a 10x10km resolution to keep computing times reasonable. Furthermore, the stratification of the topography was implemented in classes of 100 meters.
+
 ![](Visualizations/pseudo%20absences%20stratified.jpeg)
+
+Finally, three sets of 10 000 geographically weighed pseudo-absences were generated, one for each species. These pseudo-absences are aggregated around presences.
 
 ![](Visualizations/pseudo%20absences%20geographically%20weighed.jpeg)
 
@@ -438,7 +442,7 @@ Generating geographically stratified pseudo-absences entailed to aggregate the 1
 # detach("package:dismo")
 # detach("package:raster")
 # 
-# # Sample according to derived probabliity
+# # Sample according to derived probability
 # smp_condor <- sample(1:nrow(df_idw_condor), size = 10000, prob = df_idw_condor$layer)
 # smp_puma <- sample(1:nrow(df_idw_puma), size = 10000, prob = df_idw_puma$layer)
 # smp_bear <- sample(1:nrow(df_idw_bear), size = 10000, prob = df_idw_bear$layer)
@@ -475,6 +479,14 @@ Generating geographically stratified pseudo-absences entailed to aggregate the 1
 # write.csv(geo_condor, "Pseudo absences/pseudo absences geographically weighed condor.csv")
 # write.csv(geo_puma, "Pseudo absences/pseudo absences geographically weighed puma.csv")
 # write.csv(geo_bear, "Pseudo absences/pseudo absences geographically weighed bear.csv")
+# 
+# # Finally, we check if the five generated files all have 10 000 entries
+# cols <- numeric(length(list.files("Pseudo absences/")))
+# for(i in 1:length(list.files("Pseudo absences/"))){
+#   data <- read.csv(paste0("Pseudo absences/", list.files("Pseudo absences/")[i], sep = ""))
+#   cols[i] <- nrow(data)
+# }
+# cols
 
 ############################################################################################
 #The code above has been run, the files are stored in the repository, please don't run again but access the files directly (Manuel 23/4; 16:10)
