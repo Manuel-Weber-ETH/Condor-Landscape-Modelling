@@ -366,6 +366,78 @@ We will crop all layers to the study area (shapefile located in the folder study
 ##population density
 pop_dens <- raster("C:/Users/justi/OneDrive/Studium/Umweltnaturwissenschaften/Landscape Modelling/Condor/download polybox/gpw_v4_population_density_rev11_2020_30_sec.tif")
 
+library('Rcpp')
+library('terra')
+library('ggsignif')
+library('raster')
+
+### DEM
+dem <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\DEM_aea.tif')
+plot(dem, axes=F)
+
+
+### Predictors
+## Temperature
+# Mean annual air temperature (bio1)
+temp_mean <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio1_1981-2010_V.2.1.tif')
+plot(temp_mean, axes=F)
+# Annual range of air temperature (bio7)
+temp_range <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio7_1981-2010_V.2.1.tif')
+plot(temp_range, axes=F)
+
+## Precipitation
+# Annual Precipitation amount (bio12)
+prec_annual <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio12_1981-2010_V.2.1.tif')
+plot(prec_annual, axes=F)
+# Precipitation amount of the wettest month (bio13)
+prec_wettest_month <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio13_1981-2010_V.2.1.tif')
+plot(prec_wettest_month, axes=F)
+# Precipitation amount of the driest month (bio14)
+prec_driest_month <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio14_1981-2010_V.2.1.tif')
+plot(prec_driest_month, axes=F)
+
+## Tree cover
+tree_cover <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\tree_cover_2000_aea.tif')
+plot(tree_cover, axes=F)
+
+## Canopy height
+canopy_height <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\canopy_height_aea.tif')
+plot(canopy_height, axes=F)
+
+
+### Create one predictor layer
+## Check if the resolution, origin and coordinate reference system match among the different layers with the *compareGeom* function
+compareGeom(dem, temp_mean, temp_range, prec_annual, prec_wettest_month, prec_driest_month, tree_cover, canopy_height)
+
+sapply(list(dem=dem, temp_mean=temp_mean, temp_range=temp_range, prec_annual=prec_annual, prec_wettest_month=prec_wettest_month, prec_dries_month=prec_driest_month, tree_cover=tree_cover, canopy_height=canopy_height),
+       FUN=function(x){c(origin=origin(x), res=res(x), ext=ext(x)[1:4])})
+
+# Reproject the *bio* raster so they have the same spatial properties as the *dem* raster (*tree_cover* and *canopy_height* already have)
+temp_mean <- project(temp_mean, dem)
+temp_range <- project(temp_range, dem)
+prec_annual <- project(prec_annual, dem)
+prec_wettest_month <- project(prec_wettest_month, dem)
+prec_driest_month <- project(prec_driest_month, dem)
+
+# Check again with *copmareGeom* function
+compareGeom(dem, temp_mean, temp_range, prec_annual, prec_wettest_month, prec_driest_month, tree_cover, canopy_height)
+
+sapply(list(dem=dem, temp_mean=temp_mean, temp_range=temp_range, prec_annual=prec_annual, prec_wettest_month=prec_wettest_month, prec_driest_month=prec_driest_month, tree_cover=tree_cover, canopy_height=canopy_height),
+       FUN=function(x){c(origin=origin(x), res=res(x), ext=ext(x)[1:4])})
+
+
+## Stacking the layers
+predictors <- c(dem, temp_mean, temp_range, prec_annual, prec_wettest_month, prec_driest_month, tree_cover, canopy_height)
+names(predictors) <- c('dem', 'temp_mean', 'temp_range', 'prec_annual', 'prec_wettest_month', 'prec_driest_month', 'tree_cover', 'canopy_height')
+predictors
+
+
+writeRaster(temp_mean, 'temp_mean.tif')
+writeRaster(temp_range, 'temp_range.tif')
+writeRaster(prec_annual, 'precipitation_annual.tif')
+writeRaster(prec_wettest_month, 'precipitation_wettest_month.tif')
+writeRaster(prec_driest_month, 'precipitatioin_driest_month.tif')
+
 ### Climatic predictors
 ## Temperature
 # Mean annual air temperature
