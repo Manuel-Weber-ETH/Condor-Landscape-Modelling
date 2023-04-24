@@ -23,17 +23,27 @@ Weekly meetings on Tuesdays at 4:15 PM on the green floor in CHN or in F77 (no m
 
 Summarize and email questions to Monika before the meetings.
 
-| Date        | Progress Milestone                                                                          | Suggested Focus                                                     |
-|------------------|-------------------------------|-----------------------|
-| 03.04-07.04 | Species occurrence data downloaded and cleaned                                              | Data retrieval and cleaning                                         |
-| 10.04-14.05 | Environmental data prepared for model fitting                                               | Environmental exploration                                           |
-| 17.04-21.04 | 1.Initial set of predictors selected 2.Created 1st set of PAs (e.g.: random)                | Environmental predictors ; Pseudoabsence creation (PAs)             |
-| 24.04-28.04 | Buffered, target-group, environmentally stratified PAs                                      | Pseudoabsence creation (PAs)                                        |
-| 01.05-05.05 | Models fitted and evaluated (at least 2 algorithms)                                         | Model fitting & evaluation                                          |
-| 08.05-12.05 | Evidence of exploring different model parameters, selected ones with best fit and accuracy. | Generated predictor response curves Model fitting & model selection |
-| 15.05-19.05 | Creation of ranges (polygons for mammals)                                                   | Alternative approach to SDM                                         |
-| 22.05-26.05 | Overlap of distributions and protected areas                                                | Implications for conservation                                       |
-| 29.05       | Presentation                                                                                |                                                                     |
++-----------------+---------------------------------------------------------------------------------------------+---------------------------------------------------------------------+
+| Date            | Progress Milestone                                                                          | Suggested Focus                                                     |
++=================+=============================================================================================+=====================================================================+
+| 03.04-07.04     | Species occurrence data downloaded and cleaned                                              | Data retrieval and cleaning                                         |
++-----------------+---------------------------------------------------------------------------------------------+---------------------------------------------------------------------+
+| 10.04-14.05     | Environmental data prepared for model fitting                                               | Environmental exploration                                           |
++-----------------+---------------------------------------------------------------------------------------------+---------------------------------------------------------------------+
+| 17.04-21.04     | 1.Initial set of predictors selected 2.Created 1st set of PAs (e.g.: random)                | Environmental predictors ; Pseudoabsence creation (PAs)             |
++-----------------+---------------------------------------------------------------------------------------------+---------------------------------------------------------------------+
+| 24.04-28.04     | Buffered, target-group, environmentally stratified PAs                                      | Pseudoabsence creation (PAs)                                        |
++-----------------+---------------------------------------------------------------------------------------------+---------------------------------------------------------------------+
+| 01.05-05.05     | Models fitted and evaluated (at least 2 algorithms)                                         | Model fitting & evaluation                                          |
++-----------------+---------------------------------------------------------------------------------------------+---------------------------------------------------------------------+
+| 08.05-12.05     | Evidence of exploring different model parameters, selected ones with best fit and accuracy. | Generated predictor response curves Model fitting & model selection |
++-----------------+---------------------------------------------------------------------------------------------+---------------------------------------------------------------------+
+| 15.05-19.05     | Creation of ranges (polygons for mammals)                                                   | Alternative approach to SDM                                         |
++-----------------+---------------------------------------------------------------------------------------------+---------------------------------------------------------------------+
+| 22.05-26.05     | Overlap of distributions and protected areas                                                | Implications for conservation                                       |
++-----------------+---------------------------------------------------------------------------------------------+---------------------------------------------------------------------+
+| 29.05           | Presentation                                                                                |                                                                     |
++-----------------+---------------------------------------------------------------------------------------------+---------------------------------------------------------------------+
 
 : Preliminary schedule
 
@@ -53,7 +63,7 @@ Some information about habitat and diet of the 3 focal species
 
 -   <https://avianreport.com/andean-condor-range-and-habitat/>
 
--   [https://nationalzoo.si.edu/animals/andean-bear#:\~:text=Andean%20bears%20live%20in%20a](https://nationalzoo.si.edu/animals/andean-bear#:~:text=Andean%20bears%20live%20in%20a,forest%20to%20thorny%20dry%20forest.){.uri}
+-   [https://nationalzoo.si.edu/animals/andean-bear\#:\~:text=Andean%20bears%20live%20in%20a](https://nationalzoo.si.edu/animals/andean-bear#:~:text=Andean%20bears%20live%20in%20a,forest%20to%20thorny%20dry%20forest.){.uri}
 
 -   [forest%20to%20thorny%20dry%20forest.](https://nationalzoo.si.edu/animals/andean-bear#:~:text=Andean%20bears%20live%20in%20a,forest%20to%20thorny%20dry%20forest.){.uri} <https://animalia.bio/south-american-cougar>
 
@@ -606,7 +616,7 @@ sapply(list(dem=dem, temp_mean=temp_mean, temp_range=temp_range, prec_annual=pre
 
 
 ## Stacking the layers
-predictors <- c(dem, temp_mean, temp_range, prec_annual, prec_wettest_month, prec_driest_month, tree_cover, canopy_height)
+predictors <- c(dem, temp_mean, temp_range, prec_annual, prec_wettest_month, prec_driest_month, tree_cover, canopy_height, slope, aspect)
 names(predictors) <- c('dem', 'temp_mean', 'temp_range', 'prec_annual', 'prec_wettest_month', 'prec_driest_month', 'tree_cover', 'canopy_height')
 predictors
 
@@ -662,9 +672,25 @@ writeRaster(bio13, "Rasters/bio13.tif")
 writeRaster(bio14, "Rasters/bio14.tif")
 
 # Stacking of the layers
-predictors <- c(dem, slope, aspect, pop_dens, bio1, bio7, bio12, bio13, bio14)
-names(predictors) <- c('dem', 'slope', 'aspect', 'pop_dens', 'bio1', 'bio7', 'bio12', 'bio13', 'bio14')
+predictors <- c(predictors, slope, aspect, pop_dens, bio1, bio7, bio12, bio13, bio14)
+names(predictors)[9:nlyr(predictors)] <- c('dem', 'slope', 'aspect', 'pop_dens', 'bio1', 'bio7', 'bio12', 'bio13', 'bio14')
+writeRaster(predictors, "Raster/predictors")
 predictors
+
+
+#water bodies
+install.packages("sf")
+library(sf)
+
+lakes <- read_sf("C:/Users/justi/OneDrive/Studium/Umweltnaturwissenschaften/Landscape Modelling/Condor/download polybox/sa_lakes.shp")
+
+rivers <- read_sf("C:/Users/justi/OneDrive/Studium/Umweltnaturwissenschaften/Landscape Modelling/Condor/download polybox/HydroRIVERS_v10_sa.shp")
+
+(water <- st_union(lakes[, 'geometry'], rivers[, 'geometry'], col='blue')) #merge lakes & rivers
+plot(st_geometry(water), col='lightblue')
+water_buffer <- st_buffer(water, 500) #create water buffer
+water_buffer_r <- rasterize(water_buffer, dem) #rasterize
+writeRaster(water_buffer_r, 'Raster/water_buffer.tif')
 ```
 
 Extracting environmental conditions for presences and absences:
@@ -674,5 +700,3 @@ Extracting environmental conditions for presences and absences:
 Code for reprojection:
 
 dem_reprojected \<- terra::project(x = dem, y = "ESRI:102033", method = "near")
-
-Test change Manu
