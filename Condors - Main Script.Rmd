@@ -557,25 +557,20 @@ dem <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelli
 plot(dem, axes=F)
 
 
-### Predictors
-## Temperature
-# Mean annual air temperature (bio1)
-temp_mean <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio1_1981-2010_V.2.1.tif')
-plot(temp_mean, axes=F)
-# Annual range of air temperature (bio7)
-temp_range <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio7_1981-2010_V.2.1.tif')
-plot(temp_range, axes=F)
+#### Predictors
+### Temperature
+## Mean annual air temperature (bio1)
+#temp_mean <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio1_1981-2010_V.2.1.tif')
+## Annual range of air temperature (bio7)
+#temp_range <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio7_1981-2010_V.2.1.tif')
 
-## Precipitation
-# Annual Precipitation amount (bio12)
-prec_annual <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio12_1981-2010_V.2.1.tif')
-plot(prec_annual, axes=F)
-# Precipitation amount of the wettest month (bio13)
-prec_wettest_month <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio13_1981-2010_V.2.1.tif')
-plot(prec_wettest_month, axes=F)
-# Precipitation amount of the driest month (bio14)
-prec_driest_month <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio14_1981-2010_V.2.1.tif')
-plot(prec_driest_month, axes=F)
+### Precipitation
+## Annual Precipitation amount (bio12)
+#prec_annual <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio12_1981-2010_V.2.1.tif')
+## Precipitation amount of the wettest month (bio13)
+#prec_wettest_month <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio13_1981-2010_V.2.1.tif')
+## Precipitation amount of the driest month (bio14)
+#prec_driest_month <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio14_1981-2010_V.2.1.tif')
 
 ## Tree cover
 tree_cover <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\tree_cover_2000_aea.tif')
@@ -586,8 +581,8 @@ canopy_height <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landsca
 plot(canopy_height, axes=F)
 
 
-### Create one predictor layer
-## Check if the resolution, origin and coordinate reference system match among the different layers with the *compareGeom* function
+#### Create one predictor layer
+### Check if the resolution, origin and coordinate reference system match among the different layers with the #*compareGeom* function
 compareGeom(dem, temp_mean, temp_range, prec_annual, prec_wettest_month, prec_driest_month, tree_cover, canopy_height)
 
 sapply(list(dem=dem, temp_mean=temp_mean, temp_range=temp_range, prec_annual=prec_annual, prec_wettest_month=prec_wettest_month, prec_dries_month=prec_driest_month, tree_cover=tree_cover, canopy_height=canopy_height),
@@ -608,7 +603,7 @@ sapply(list(dem=dem, temp_mean=temp_mean, temp_range=temp_range, prec_annual=pre
 
 
 ## Stacking the layers
-predictors <- c(dem, temp_mean, temp_range, prec_annual, prec_wettest_month, prec_driest_month, tree_cover, canopy_height, slope, aspect)
+predictors <- c(dem, temp_mean, temp_range, prec_annual, prec_wettest_month, prec_driest_month, tree_cover, canopy_height)
 names(predictors) <- c('dem', 'temp_mean', 'temp_range', 'prec_annual', 'prec_wettest_month', 'prec_driest_month', 'tree_cover', 'canopy_height')
 predictors
 
@@ -619,55 +614,37 @@ writeRaster(prec_annual, 'precipitation_annual.tif')
 writeRaster(prec_wettest_month, 'precipitation_wettest_month.tif')
 writeRaster(prec_driest_month, 'precipitatioin_driest_month.tif')
 
-### Climatic predictors
-## Temperature
-# Mean annual air temperature
-bio1 <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio1_2011-2040_gfdl-esm4_ssp126_V.2.1.tif')
-#Annual range of air temperature
-bio7 <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio7_2011-2040_gfdl-esm4_ssp126_V.2.1.tif')
 
-## Precipitation
-# Annual Precipitation amount
-bio12 <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio12_2011-2040_gfdl-esm4_ssp126_V.2.1.tif')
-# Precipitation amount of the wettest month
-bio13 <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio13_2011-2040_gfdl-esm4_ssp126_V.2.1.tif')
-# Precipitation amount of the driest month
-bio14 <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio14_2011-2040_gfdl-esm4_ssp126_V.2.1.tif')
 
-## Tree cover
-tree_cover <- rast("C:\Users\tanja\OneDrive\Dokumente\UZH FS_23\Landscape Modelling\Project\API_AG.LND.FRST.ZS_DS2_en_csv_v2_5358376\API_AG.LND.FRST.ZS_DS2_en_csv_v2_5358376.csv")
+## Read in rasters
+## Read in projected files
+# Mean annual air temperature (bio1)
+temp_mean <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\temp_mean.tif')
+# Annual range of air temperature (bio7)
+temp_range <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\temp_range.tif')
+# Annual Precipitation amount (bio12)
+prec_annual <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\precipitation_annual.tif')
+# Precipitation amount of the wettest month (bio13)
+prec_wettest_month <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\precipitation_wettest_month.tif')
+# Precipitation amount of the driest month (bio14)
+prec_driest_month <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\precipitatioin_driest_month.tif')
+# DEM
+dem <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\DEM_aea.tif')
+# Tree cover
+tree_cover <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\tree_cover_2000_aea.tif')
+# Canopy height
+canopy_height <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\canopy_height_aea.tif')
+
+# Tree cover
+tree_cover <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\tree_cover_2000_aea.tif')
+# Canopy height
+canopy_height <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\canopy_height_aea.tif')
 
 #convert to Spatraster
 slope <- as(slope, "SpatRaster")
 aspect <- as(aspect, "SpatRaster")
 pop_dens <- as(pop_dens, "SpatRaster")
 dem <- as(dem, "SpatRaster")
-
-# Reproject the *bio* raster so they have the same spatial properties as the *dem* raster
-bio1 <- project(bio1, dem)
-bio7 <- project(bio7, dem)
-bio12 <- project(bio12, dem)
-bio13 <- project(bio13, dem)
-bio14 <- project(bio14, dem)
-pop_dens <- project(pop_dens, dem)
-
-## Create one predictor layer
-# Check if the resolution, origin and coordinate reference system match among the different layers with the *compareGeom* function
-compareGeom(dem, slope, aspect, pop_dens, bio1, bio7, bio12, bio13, bio14)
-
-#store raster
-writeRaster(pop_dens, "Rasters/pop_dens.tif")
-writeRaster(bio1, "Rasters/bio1.tif")
-writeRaster(bio7, "Rasters/bio7.tif")
-writeRaster(bio12, "Rasters/bio12.tif")
-writeRaster(bio13, "Rasters/bio13.tif")
-writeRaster(bio14, "Rasters/bio14.tif")
-
-# Stacking of the layers
-predictors <- c(predictors, slope, aspect, pop_dens, bio1, bio7, bio12, bio13, bio14)
-names(predictors)[9:nlyr(predictors)] <- c('dem', 'slope', 'aspect', 'pop_dens', 'bio1', 'bio7', 'bio12', 'bio13', 'bio14')
-writeRaster(predictors, "Raster/predictors")
-predictors
 
 
 #water bodies
@@ -692,6 +669,120 @@ Extracting environmental conditions for presences and absences:
 Code for reprojection:
 
 dem_reprojected \<- terra::project(x = dem, y = "ESRI:102033", method = "near")
+
+```{r}
+####
+
+################################
+model_matrix_condor
+model_matrix_puma
+model_matrix_bear
+
+summary(model_matrix_condor)
+summary(model_matrix_puma)
+summary(model_matrix_bear)
+################################
+
+### Creating a model matrix
+# combining observation data of the species with the environmental data at the sampling points
+# Matrix must consist the coordinates of the sampling points, presences and absences, and the local environmental conditions
+
+model_matrix <- condor
+names(model_matrix)[4] <- 'condor'
+model_matrix$puma <- puma$Presence[match(model_matrix$X, puma$X)]
+model_matrix$bear <- bear$Presence[match(model_matrix$X, bear$X)]
+summary(model_matrix)
+
+# Add environmental values and remove NAs
+model_matrix <- cbind(model_matrix, extract(predictors, model_matrix[, c('x', 'y')], ID=F))
+summary(model_matrix)
+model_matrix <- model_matrix[complete.cases(model_matrix),]
+summary(model_matrix)
+
+# Save matrix
+# write.Raster(model_matrix, 'model_matrix.tif')
+
+# Check number of presences and absences for each species (here only presences)
+table(model_matrix$condor)
+table(model_matrix$puma)
+table(model_matrix$bear)
+
+
+## Plot the data (does not work here but works in my own RStudio)
+# Condor
+plot(dem, axes = FALSE, mar = c(.5,.5,1,.5), col=viridis(1e3))
+points(model_matrix$x[model_matrix$condor==1], 
+       model_matrix$y[model_matrix$condor==1], #Presences
+       col = 'yellow', pch = 16, cex = 0.75)
+points(model_matrix$x[model_matrix$condor==0], 
+       model_matrix$y[model_matrix$condor==0], #Absences
+       col = 'red', pch = 16, cex = 0.75)
+
+# Puma
+plot(dem, axes = FALSE, mar = c(.5,.5,1,.5), col=viridis(1e3))
+points(model_matrix$x[model_matrix$puma==1], 
+       model_matrix$y[model_matrix$puma==1], #Presences
+       col = 'yellow', pch = 16, cex = 0.75)
+points(model_matrix$x[model_matrix$puma==0], 
+       model_matrix$y[model_matrix$puma==0], #Absences
+       col = 'red', pch = 16, cex = 0.75)
+
+# Bear
+plot(dem, axes = FALSE, mar = c(.5,.5,1,.5), col=viridis(1e3))
+points(model_matrix$x[model_matrix$bear==1], 
+       model_matrix$y[model_matrix$bear==1], #Presences
+       col = 'yellow', pch = 16, cex = 0.75)
+points(model_matrix$x[model_matrix$bear==0], 
+       model_matrix$y[model_matrix$bear==0], #Absences
+       col = 'red', pch = 16, cex = 0.75)
+###### ---> Points are the same in all plots
+
+
+#### Correlation among predictors with model_matrix
+### From the lab:
+# Subset the model_matrix for environmental predictors
+vls <- model_matrix_condor[, 6:ncol(model_matrix_condor)]
+
+# Calcualte all pairwise Pearson correlation coefficients
+corma <- as.matrix(cor(vls))
+
+# Prepare the plot
+par(mfrow = c(1,1), oma = c(0,7.5,7,0), mar = c(0,0,0,0), ps = 8, cex = 1, xpd = NA)
+
+plot(1, 1, xlim = c(0, ncol(vls)-.5), ylim = c(0.5, ncol(vls)), 
+     xaxs = "i", yaxs = "i", type = "n", xaxt = "n", yaxt = "n", bty = "n", 
+     ylab = "", xlab = "")
+
+# Loop over the upper left half of the correlation matrix and plot the values
+for(i in 1:(ncol(vls)-1)){
+  
+  if(i<ncol(vls)){
+    text(i-.5, ncol(vls)+.3, colnames(vls)[i], pos=2,offset=0,srt=-90) #x-axis labels
+  }
+  
+  for(j in (i+1):ncol(vls)){
+    # Define color code: green = OK, orange = problematic, red = big problem
+    cl <- ifelse(abs(corma[i,j]) < .7, "green", 
+                 ifelse(abs(corma[i,j]) < .9, "orange", "red"))
+    points(i-.5, j-.5, cex = 5, pch = 16, col = cl)
+    # Add Pearson correlation coefficients
+    text(i-.5, j-.5, round(corma[i,j], digits = 2), cex = .9) 
+    
+    if(i==1){
+      text(i-.5, j-.5, colnames(vls)[j], pos = 2, offset = 2) # y-axis labels
+    }
+  }
+}
+par(xpd = NA)
+#(does not work here but works in my own RStudio)
+#Do for each model_matrix (condor, puma, bear)?
+
+
+
+```
+
+
+
 
 ## Chunk 5: Fitting first Models (Manuel)
 
