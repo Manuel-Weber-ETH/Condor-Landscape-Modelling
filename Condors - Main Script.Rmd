@@ -23,17 +23,17 @@ Weekly meetings on Tuesdays at 4:15 PM on the green floor in CHN or in F77 (no m
 
 Summarize and email questions to Monika before the meetings.
 
-| Date        | Progress Milestone                                                                          | Suggested Focus                                                     |
-|---------------|---------------------------------|------------------------|
-| 03.04-07.04 | Species occurrence data downloaded and cleaned                                              | Data retrieval and cleaning                                         |
-| 10.04-14.05 | Environmental data prepared for model fitting                                               | Environmental exploration                                           |
-| 17.04-21.04 | 1.Initial set of predictors selected 2.Created 1st set of PAs (e.g.: random)                | Environmental predictors ; Pseudoabsence creation (PAs)             |
-| 24.04-28.04 | Buffered, target-group, environmentally stratified PAs                                      | Pseudoabsence creation (PAs)                                        |
-| 01.05-05.05 | Models fitted and evaluated (at least 2 algorithms)                                         | Model fitting & evaluation                                          |
-| 08.05-12.05 | Evidence of exploring different model parameters, selected ones with best fit and accuracy. | Generated predictor response curves Model fitting & model selection |
-| 15.05-19.05 | Creation of ranges (polygons for mammals)                                                   | Alternative approach to SDM                                         |
-| 22.05-26.05 | Overlap of distributions and protected areas                                                | Implications for conservation                                       |
-| 29.05       | Presentation                                                                                |                                                                     |
+| Date        | Progress Milestone                                                                         | Suggested Focus                                                      |
+|------------------|-------------------------------|-----------------------|
+| 03.04-07.04 | Species occurrence data downloaded and cleaned                                             | Data retrieval and cleaning                                          |
+| 10.04-14.05 | Environmental data prepared for model fitting                                              | Environmental exploration                                            |
+| 17.04-21.04 | 1.Initial set of predictors selected 2.Created 1st set of PAs (e.g.: random)               | Environmental predictors ; Pseudoabsence creation (PAs)              |
+| 24.04-28.04 | Buffered, target-group, environmentally stratified PAs                                     | Pseudoabsence creation (PAs)                                         |
+| 01.05-05.05 | Models fitted and evaluated (at least 2 algorithms)                                        | Model fitting & evaluation                                           |
+| 08.05-12.05 | Evidence of exploring different model parameters, selected ones with best fit and accuracy | Generated predictor response curves, model fitting & model selection |
+| 15.05-19.05 | Creation of ranges (polygons for mammals)                                                  | Alternative approach to SDM                                          |
+| 22.05-26.05 | Overlap of distributions and protected areas                                               | Implications for conservation                                        |
+| 29.05       | Presentation                                                                               |                                                                      |
 
 : Preliminary schedule
 
@@ -781,20 +781,20 @@ par(xpd = NA)
 
 ```
 
-
-
-
-## Chunk 5: Fitting first Models (Manuel)
+## Chunk 5: Model Fitting (Manuel)
 
 The following chunk does the following:
 
--   For each of the three species, one GLM and one RF model is fitted based on the random set of pseudo-absences at a resolution of 1x1 km. Pseudo-absences that fall within cells that contain presences are discarded.
+-   For each species and set of pseudo-absences, one generalized linear model (GLM), one random forest model (RF) and one gradient boosting machine model (GBM) is fitted at a resolution of 1x1 km.
 
--   The models are optimized by excluding predictors with less explanatory power (stepwise AIC optimization).
+-   Pseudo-absences that fall within cells that contain presences are discarded.
 
--   Response curves are generated.
+-   The models are optimized by excluding predictors with less explanatory power (step-wise AIC optimization).
+
+GBM: Gradient boosting machine is an ensemble algorithm that fits boosted decision trees by minimizing an error gradient.
 
 ```{r}
+########################## Don't run, the bottom chunk performs better
 ## Reading in presence data
 condor <- read.csv("Occurrence data/condor_presences_1km.csv")
 puma <- read.csv("Occurrence data/puma_presences_1km.csv")
@@ -1200,4 +1200,299 @@ for(i in used_preds){
   # Redraw panel box
   box()
 }
+```
+
+```{r}
+### Possibly better solution: More compact than first chunk (loop)
+
+# Reading in presence data
+condor <- read.csv("Occurrence data/condor_presences_1km.csv")
+puma <- read.csv("Occurrence data/puma_presences_1km.csv")
+bear <- read.csv("Occurrence data/bear_presences_1km.csv")
+
+# Reading in pseudo absences
+pa_random <- read.csv("Pseudo absences/pseudo absences random.csv")
+pa_strat <- read.csv("Pseudo absences/pseudo absences stratified elevation.csv")
+pa_geo_condor <- read.csv("Pseudo absences/pseudo absences geographically weighed condor.csv")
+pa_geo_puma <- read.csv("Pseudo absences/pseudo absences geographically weighed puma.csv")
+pa_geo_bear <- read.csv("Pseudo absences/pseudo absences geographically weighed bear.csv")
+
+# Reading in environmental predictors (adjust path)
+predictors <- rast("predictors.tif")
+
+# Extracting environmental predictors for occurrence and pseudo absence data
+model_matrix_condor <- cbind(condor, extract(predictors, condor[, c("x", "y")], ID = F))
+model_matrix_puma <- cbind(puma, extract(predictors, puma[, c("x", "y")], ID = F))
+model_matrix_bear <- cbind(bear, extract(predictors, bear[, c("x", "y")], ID = F))
+
+pa_random <- cbind(pa_random, extract(predictors, pa_random[, c("x", "y")], ID = F))
+pa_strat <- cbind(pa_strat, extract(predictors, pa_strat[, c("x", "y")], ID = F))
+pa_geo_condor  <- cbind(pa_geo_condor, extract(predictors, pa_geo_condor[, c("x", "y")], ID = F))
+pa_geo_puma  <- cbind(pa_geo_puma, extract(predictors, pa_geo_puma[, c("x", "y")], ID = F))
+pa_geo_bear  <- cbind(pa_geo_bear, extract(predictors, pa_geo_bear[, c("x", "y")], ID = F))
+
+# Removing NAs
+model_matrix_condor <- model_matrix_condor[complete.cases(model_matrix_condor),]
+summary(model_matrix_condor)
+model_matrix_puma <- model_matrix_puma[complete.cases(model_matrix_puma),]
+summary(model_matrix_puma)
+model_matrix_bear <- model_matrix_bear[complete.cases(model_matrix_bear),]
+summary(model_matrix_bear)
+
+# General formula for glm
+form_glm_condor <- Presence ~ temp_avg + I(temp_avg^2) + slope + I(slope^2) + 
+  ndvi_sd + I(ndvi_sd^2) + ndvi_avg + I(ndvi_avg^2) + 
+  buildings_3km + I(buildings_3km^2) + forest_25 + 
+  I(forest_25^2) +prec_sum + I(prec_sum^2) + 
+  water_distance + I(water_distance^2)
+
+form_glm_puma <- Presence ~ temp_avg + I(temp_avg^2) + slope + I(slope^2) + 
+  ndvi_sd + I(ndvi_sd^2) + ndvi_avg + I(ndvi_avg^2) + 
+  buildings_3km + I(buildings_3km^2) + forest_25 + 
+  I(forest_25^2) +prec_sum + I(prec_sum^2) + 
+  water_distance + I(water_distance^2)
+
+form_glm_bear <- Presence ~ temp_avg + I(temp_avg^2) + slope + I(slope^2) + 
+  ndvi_sd + I(ndvi_sd^2) + ndvi_avg + I(ndvi_avg^2) + 
+  buildings_3km + I(buildings_3km^2) + forest_25 + 
+  I(forest_25^2) +prec_sum + I(prec_sum^2) + 
+  water_distance + I(water_distance^2)
+
+# General formula for RF
+
+form_rf_condor <- Presence ~ temp_avg + slope + ndvi_sd + 
+  ndvi_avg + buildings_3km + forest_25 + prec_sum + 
+  water_distance
+
+form_rf_puma <- Presence ~ temp_avg + slope + ndvi_sd + 
+  ndvi_avg + buildings_3km + forest_25 + prec_sum + 
+  water_distance
+
+form_rf_bear <- Presence ~ temp_avg + slope + ndvi_sd + 
+  ndvi_avg + buildings_3km + forest_25 + prec_sum + 
+  water_distance
+
+############## Fill in predictors as appropriate
+
+######################################################################################
+# Fitting models
+######################################################################################
+
+library(misty)
+library(ranger)
+library(gbm)
+
+# Define levels
+spcs <- c("condor", "puma", "bear")
+pseu <- c("random","strat","geo")
+
+# Define empty list
+modli <- list()
+# Loop over species
+for(i in spcs){
+  spc_i <- list() # Empty sublist
+  if(i == "condor"){ # Define presence data
+    pres <- model_matrix_condor
+    form_glm <- form_glm_condor 
+    form_rf <- form_rf_condor
+  } else if (i == "puma") {
+    pres <- model_matrix_puma
+    form_glm <- form_glm_puma 
+    form_rf <- form_rf_puma
+  } else if (i == "bear") {
+    pres <- model_matrix_bear
+    form_glm <- form_glm_bear
+    form_rf <- form_rf_bear
+  }
+  for(j in pseu){ # Loop over pseudo-absences
+    pseu_j <- list() # Empty subsublist
+    if(j == "random"){ # Define pseudoabsences
+      abs <- pa_random
+    } else if(j == "strat"){
+      abs <- pa_strat
+    } else {
+      if(i == "condor"){
+        abs <- pa_geo_condor
+      } else if(i == "puma"){
+        abs <- pa_geo_puma
+      } else if(i == "bear") {
+        abs <- pa_geo_bear
+      }
+    }
+    
+    # Create model matrix
+    dat <- rbind(pres,abs[,colnames(pres)])
+    
+    # Remove duplicates
+    duplicates <- as.numeric(rownames(df.unique(df.duplicated(dat, x, y))))
+    dat <- dat[-duplicates,]
+    
+    # Fit glm
+    glm_bse <- glm(form_glm,
+                     data = dat, family = "binomial")
+    pseu_j$glm <- step(glm_bse, directions = 'both', trace = 0)
+    
+    # Transform response to factor for random forest
+    dat$Presence <- as.factor(dat$Presence)
+    
+    # Fit random forest
+    pseu_j$rf <- ranger(form_rf,
+                               data = dat, num.trees = 500, probability = TRUE, 
+                               min.node.size = 10) ## node size can be decreased for a more complex model
+    # Fit GBM
+    pseu_j$gbm <- gbm(form_rf,
+                      data = dat, distribution = "binomial", cv.folds = 10, shrinkage = 0.1, n.minobsinnode = 10,
+                      n.trees = 500)
+    
+    spc_i[[j]] <- pseu_j # Store output in sublist
+    
+    print(paste(i, j)) # Print loop indices
+  }
+  names(spc_i) <- pseu
+  modli[[i]] <- spc_i  # Store output in list
+}
+
+names(modli) <- spcs
+
+summary(modli$nc$random$simple_glm)
+
+saveRDS(modli, file = "output/Practical_2_fitted_models.rds")
+```
+
+## Chunk 6: Model Evaluation (Justine & Tanja)
+
+Briefly explain what the following chunk does.
+
+```{r}
+### your code
+```
+
+## Chunk 7: Polygon-based alternative approach (Manuel)
+
+The following script has been adapted from *Lyu et al., 2022. An integrated high-resolution mapping shows congruent biodiversity patterns of Fagales and Pinales*.
+
+```{r}
+# Read in occurrence data
+### with two columns "x" and "y" to give the longitude and latitude of occurrences
+input_dir <- "example/cleaning_cc_occurrences"
+
+# Load polygon mapping functions from where you save these scripts
+source("./range_fun.R")
+
+### Please set the names for output maps for each species, and the length should be the same with input occurrence .csv files
+### If this is not set, the names would be the same with the input files.
+  
+  species_name <- NA # (optional)
+
+### Default parameter settings:
+  
+  proj <- CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")   # Spatial projection in which the coordinates of the occurrence data (input) are stored. The output raster of the species range will have the same projection.
+  Climatic_layer <- NA   #(Optional) climate raster (e.g. temperature) used to improve the distribution range (by rejecting cells with unsuitable climate).
+  degrees_outlier <- 5   # distance threshold (degrees) for outlier classification. If the nearest minimal distance to the next point is larger than this threshold, it will be considered as an outlier. 
+  clustered_points_outlier <- 2   # maximum number of points which are closer to each other than the degrees_outlier, but should still be considered as outliers.
+  final_resolution <- 0.2   # determines the final resolution of the species range raster.
+  buffer_width_point <- 0.5   # buffer (in degrees) which will be applied around single observations.
+  buffer_increment_point_line <- 0.5   # how much should the buffer be increased for each point on a line.
+  buffer_width_polygon <- 0.1   # buffer (in degrees) which will be applied around distribution polygons (for each bioregion)
+  cut_off <- 0.05   # quantile of temperatures (on each site) which are not considered to be suitable for the species. e.g: cut_off=0.05: lowest and highest 5% of temperature distribution
+  method <- "PCM"   # PCM (percentage cells method) method uses temperature filter only at the edge of range raster, ACM (all cells method) method for all cells.
+  cover_threshold <- 0.3   # only if method=F. Specifies the threshold of proportion of covered area by the range polygon above which the corresponding raster will be classified as "present" without considering the temperature.
+  dest_output='3.1_mapping_Polygons'   # path to where all rasters, plots, log files should be saved (if write_plot/write_raster=T)
+
+
+### Please run following codes to get the polygon maps in the folder "Polygons" under your working directory
+
+### =========================================================================
+### Preparations of packages, functions and data ####
+### =========================================================================
+
+### install packages globally
+
+# set a local mirror server
+options(repos=structure(c(CRAN="https://stat.ethz.ch/CRAN/")))
+
+# Packages to load
+packages <- list("rgbif", "geometry", "maps", "ClusterR", "mclust", "raster","rgdal" ,"maptools" ,"tools" ,"ecospat" ,"rgeos" ,"PresenceAbsence")
+
+# Install missing ones and load all packages
+for (p in packages) {
+  if(!library(package = p, logical.return = TRUE, character.only = TRUE)){
+    install.packages(p)
+    library(package = p, character.only = TRUE)
+  } else {   
+    library(package = p, character.only = TRUE) 
+  }
+}
+
+
+### Download data from TNC. The shapefile will be saved in the folder of this script.
+### If failed, please download at https://geospatial.tnc.org/datasets/b1636d640ede4d6ca8f5e369f2dc368b/about
+### and then unzip and load manually
+if (!dir.exists("./terr-ecoregions-TNC/")) {
+  dir.create("./terr-ecoregions-TNC/")
+  
+  download.file(url = "https://www.arcgis.com/sharing/rest/content/items/b1636d640ede4d6ca8f5e369f2dc368b/data",
+                destfile = "terr-ecoregions-TNC.zip", mode = "wb")
+  
+  unzip(zipfile = "terr-ecoregions-TNC.zip", exdir = "./terr-ecoregions-TNC")
+  
+  cat(paste0("The TNC bioregion map is downloaded and saved in the folder: \n",  getwd(), "/terr-ecoregions-TNC"))
+}
+
+if (list.files("./terr-ecoregions-TNC/", pattern = ".shp")){
+  print("Loading TNC bioregion map.")
+  
+  bioregion <- readOGR(dsn="./terr-ecoregions-TNC", layer="tnc_terr_ecoregions")
+} else {
+  cat("The TNC Bioregion map does not exist. \n Please load your own map, or download and unzip from: \n https://geospatial.tnc.org/datasets/b1636d640ede4d6ca8f5e369f2dc368b/about")
+}
+
+### =========================================================================
+### Polygon mapping ####
+### =========================================================================
+
+### Load data
+
+species_csv_all <- list.files(input_dir, pattern = "\\.csv", full.names = T, recursive = T)
+if (is.na(species_name)){
+species_name <- gsub("\\.csv","",list.files(input_dir, pattern = "\\.csv", recursive = T))}
+
+
+### Load occurrence and map the range
+
+for (indexi in 1:length(species_csv_all)){
+  
+  species_name_i <- species_name[indexi]
+  species <- read.csv(species_csv_all[indexi])
+  
+  occ_coord <- unique(species[,c("x", "y")])
+  
+  print(paste0("working with        ", species_name_i, "         [index:", indexi, "]"))
+  
+  species_range <- range.fun(species_name_i, occ_coord, proj=proj,  
+                             Climatic_layer=Climatic_layer, Bioreg=bioregion, Bioreg_name = 'WWF_REALM2', 
+                             final_resolution=final_resolution, degrees_outlier=degrees_outlier, clustered_points_outlier=clustered_points_outlier,
+                             buffer_width_point=buffer_width_point, buffer_increment_point_line=buffer_increment_point_line, buffer_width_polygon=buffer_width_polygon, cut_off=cut_off, 
+                             method=method, cover_threshold=cover_threshold, desaggregate_points=F, 
+                             write_plot=T, write_raster=T,  
+                             return_raster=T, overwrite=T,dest_output=dest_output,
+                             dir_temp="./temp")
+  
+  # Bioreg: shapefile containg different bioregions (convex hulls will be classified on a bioreg basis)
+  # Bioreg_name: how is the slot containing the bioregion names called?
+  # desaggreagte_points: should close points be desaggregated? Speeds up clustering
+  
+  tmp <- tempfile()
+  do.call(file.remove, list(list.files("tmp", full.names = TRUE)))
+}
+
+cat(paste0("Polygon maps are saved in the folder: \n",  getwd(), "/",dest_output))
+```
+
+## Chunk 8: Projection and comparison
+
+Briefly explain what the following chunk does.
+
+```{r}
+### your code
 ```
