@@ -693,7 +693,7 @@ dem <- as(dem, "SpatRaster")
 # 
 # writeRaster(water_focal, "C:/Users/justi/OneDrive/Studium/Umweltnaturwissenschaften/Landscape Modelling/Condor/Raster drive/water_focal.tif", overwrite=TRUE)
 ############################################################################################
-#The code above has been run, the file is stored on the google drive, please don't run again but access the files directly (Justine 5/5; 11:34). Tanja added 
+#The code above has been run, the file is stored on the google drive, please don't run again but access the files directly (Justine 5/5; 11:34). Tanja added the water bodies to the predictor raster, so no need to access the water bodies from the google drive. 
 ############################################################################################
 ```
 
