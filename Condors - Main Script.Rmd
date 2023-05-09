@@ -1396,6 +1396,8 @@ Briefly explain what the following chunk does.
 
 ## Chunk 7: Polygon-based alternative approach (Manuel)
 
+## Run for all species in excel sheet
+
 The following scripts have been adapted from Lyu, L. *et al.* (2022) 'An integrated high-resolution mapping shows congruent biodiversity patterns of Fagales and Pinales', *The New Phytologist*, 235(2), pp. 759--772. Available at: <https://doi.org/10.1111/nph.18158>.
 
 The first chunk defines the function range_fun, which has been adapted by renouncing to the use of a temp folder for temporary storage of the convex hull.
