@@ -23,17 +23,27 @@ Weekly meetings on Tuesdays at 4:15 PM on the green floor in CHN or in F77 (no m
 
 Summarize and email questions to Monika before the meetings.
 
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 | Date        | Progress Milestone                                                                         | Suggested Focus                                                      |
-|------------------|-------------------------------|-----------------------|
++=============+============================================================================================+======================================================================+
 | 03.04-07.04 | Species occurrence data downloaded and cleaned                                             | Data retrieval and cleaning                                          |
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 | 10.04-14.05 | Environmental data prepared for model fitting                                              | Environmental exploration                                            |
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 | 17.04-21.04 | 1.Initial set of predictors selected 2.Created 1st set of PAs (e.g.: random)               | Environmental predictors ; Pseudoabsence creation (PAs)              |
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 | 24.04-28.04 | Buffered, target-group, environmentally stratified PAs                                     | Pseudoabsence creation (PAs)                                         |
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 | 01.05-05.05 | Models fitted and evaluated (at least 2 algorithms)                                        | Model fitting & evaluation                                           |
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 | 08.05-12.05 | Evidence of exploring different model parameters, selected ones with best fit and accuracy | Generated predictor response curves, model fitting & model selection |
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 | 15.05-19.05 | Creation of ranges (polygons for mammals)                                                  | Alternative approach to SDM                                          |
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 | 22.05-26.05 | Overlap of distributions and protected areas                                               | Implications for conservation                                        |
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 | 29.05       | Presentation                                                                               |                                                                      |
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 
 : Preliminary schedule
 
@@ -53,7 +63,7 @@ Some information about habitat and diet of the 3 focal species
 
 -   <https://avianreport.com/andean-condor-range-and-habitat/>
 
--   [https://nationalzoo.si.edu/animals/andean-bear#:\~:text=Andean%20bears%20live%20in%20a](https://nationalzoo.si.edu/animals/andean-bear#:~:text=Andean%20bears%20live%20in%20a,forest%20to%20thorny%20dry%20forest.){.uri}
+-   [https://nationalzoo.si.edu/animals/andean-bear\#:\~:text=Andean%20bears%20live%20in%20a](https://nationalzoo.si.edu/animals/andean-bear#:~:text=Andean%20bears%20live%20in%20a,forest%20to%20thorny%20dry%20forest.){.uri}
 
 -   [forest%20to%20thorny%20dry%20forest.](https://nationalzoo.si.edu/animals/andean-bear#:~:text=Andean%20bears%20live%20in%20a,forest%20to%20thorny%20dry%20forest.){.uri} <https://animalia.bio/south-american-cougar>
 
@@ -646,20 +656,45 @@ aspect <- as(aspect, "SpatRaster")
 pop_dens <- as(pop_dens, "SpatRaster")
 dem <- as(dem, "SpatRaster")
 
-
-#water bodies
-install.packages("sf")
-library(sf)
-
-lakes <- read_sf("C:/Users/justi/OneDrive/Studium/Umweltnaturwissenschaften/Landscape Modelling/Condor/download polybox/sa_lakes.shp")
-
-rivers <- read_sf("C:/Users/justi/OneDrive/Studium/Umweltnaturwissenschaften/Landscape Modelling/Condor/download polybox/HydroRIVERS_v10_sa.shp")
-
-(water <- st_union(lakes[, 'geometry'], rivers[, 'geometry'], col='blue')) #merge lakes & rivers
-plot(st_geometry(water), col='lightblue')
-water_buffer <- st_buffer(water, 500) #create water buffer
-water_buffer_r <- rasterize(water_buffer, dem) #rasterize
-writeRaster(water_buffer_r, 'Raster/water_buffer.tif')
+##################################################################################
+# #water bodies
+# install.packages("sf")
+# library(sf)
+# 
+# lakes <- read_sf("C:/Users/justi/OneDrive/Studium/Umweltnaturwissenschaften/Landscape Modelling/Condor/download polybox/Hydro_LAKES/Hydro_LAKES/sa_lakes.shp")%>%
+#   st_transform(st_crs(area))
+# rivers <- read_sf("C:/Users/justi/OneDrive/Studium/Umweltnaturwissenschaften/Landscape Modelling/Condor/download polybox/Hydro_RIVERS/HydroRIVERS_v10_sa.shp")%>%
+#   st_transform(st_crs(area))
+# 
+# #only use big rivers & lakes
+# library(dplyr)
+# rivers_sub <- filter(rivers, rivers$ORD_$STRA >3)
+# hist(lakes$Lake_area)
+# 
+# #crop
+# lakes_crop<-st_crop(lakes_sub$geometry, area)
+# plot(lakes_crop)
+# rivers_crop<-st_crop(rivers_sub$geometry, area)
+# plot(rivers_crop, add=T)
+# 
+# #Merge water bodies
+# water <- st_union(lakes_crop, rivers_crop) #merge lakes & rivers
+# 
+# #merged Raster by Monika because it took too long on my computer
+# water<-rast("C://Users//justi//OneDrive//Studium//Umweltnaturwissenschaften//Landscape Modelling//Condor//download polybox//sa_water_1km_aea.tif")
+# plot(water, col='lightblue')
+# 
+# #focal
+# water[is.na(water)] <- 0
+# #water<-aggregate(water, fact=5) #change resolution to 5km
+# water_focal<-focal(water, w=matrix(1, nc=3, nr=3)) 
+# plot(water_focal)
+# 
+# 
+# writeRaster(water_focal, "C:/Users/justi/OneDrive/Studium/Umweltnaturwissenschaften/Landscape Modelling/Condor/Raster drive/water_focal.tif", overwrite=TRUE)
+############################################################################################
+#The code above has been run, the file is stored on the google drive, please don't run again but access the files directly (Justine 5/5; 11:34). Tanja added 
+############################################################################################
 ```
 
 Extracting environmental conditions for presences and absences:
@@ -1369,7 +1404,7 @@ Briefly explain what the following chunk does.
 
 ## Chunk 7: Polygon-based alternative approach (Manuel)
 
-The following scripts have been adapted from Lyu, L. *et al.* (2022) \'An integrated high-resolution mapping shows congruent biodiversity patterns of Fagales and Pinales\', *The New Phytologist*, 235(2), pp. 759--772. Available at: <https://doi.org/10.1111/nph.18158>.
+The following scripts have been adapted from Lyu, L. *et al.* (2022) 'An integrated high-resolution mapping shows congruent biodiversity patterns of Fagales and Pinales', *The New Phytologist*, 235(2), pp. 759--772. Available at: <https://doi.org/10.1111/nph.18158>.
 
 The first chunk defines the function range_fun, which has been adapted by renouncing to the use of a temp folder for temporary storage of the convex hull.
 
@@ -1932,3 +1967,5 @@ Briefly explain what the following chunk does.
 ```{r}
 ### your code
 ```
+
+Justine Test
