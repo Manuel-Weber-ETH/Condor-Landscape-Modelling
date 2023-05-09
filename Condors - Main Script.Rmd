@@ -277,6 +277,8 @@ The data is thinned so that individual data points are spaced by at least 1 km. 
 
 ## Chunk 3: Generating Pseudo-absences (Manuel)
 
+**To-do: Change pseudo-absences: Generate the stratified ones using temperature and precipitation**
+
 The following chunk produces three sets of pseudo-absences. The data is stored in the "Pseudo absences" folder under "pseudo absences *type species*.csv".
 
 First, a set of 10 000 spatially random pseudo absences is generated and visualized as follows:
