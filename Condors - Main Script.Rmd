@@ -1470,6 +1470,8 @@ The following three basic visualizations are stored in the same folder and displ
 
 ![Polygon-based approach output: Andean bear](Polygon-based%20approach/plot_range/bear_epsg4326_polygon.png)
 
+Chunk 1: Defining function for polygon-based approach
+
 ```{r}
 ##################################################
 ## Description: create range maps based on bioregions and mark outliers
@@ -1850,6 +1852,8 @@ The following three basic visualizations are stored in the same folder and displ
 ############################################################################################
 ```
 
+Chunk 2: 3 study species
+
 ```{r}
 
 # setwd("C:/0_Documents/10_ETH/12_Mon 13-16_CHN E42_Landscape Modelling of Biodiversity/Project/Condor-Landscape-Modelling/Occurrence data")
@@ -2007,32 +2011,180 @@ The following three basic visualizations are stored in the same folder and displ
 ############################################################################################
 #The code above has been run, the files are stored in the repository, please don't run again but access the files directly (Manuel 04/05; 16:10)
 ############################################################################################
+```
 
+Chunk 3: 16 large mammal species
+
+```{r}
+# setwd("C:/0_Documents/10_ETH/12_Mon 13-16_CHN E42_Landscape Modelling of Biodiversity/Project/Polygon approach")
+# 
+# species <- read.csv("large_mammals.csv")
+# 
+# library(rgbif)
+# 
+# for(i in 1:length(species$Species.name)){
+#   spp <- species$Species.name[i]
+#   gbi_vg <- occ_search(scientificName = spp,
+#                        continent = "south_america",
+#                        hasCoordinate = TRUE, # Only observations with coordinates
+#                        eventDate = "2000,2023", # Observations between 1980 and 2023
+#                        hasGeospatialIssue = FALSE, # No geospatial issues
+#                        limit = 100000) # Maxiumum number of records
+#   
+#   write.csv(gbi_vg$data, paste0("Species occurrences/", spp,"_gbi.csv"))
+# }
+# 
+# 
+# # Mazama bricenii (Thomas, 1908) has no recent occurrences
+# 
+# setwd("C:/0_Documents/10_ETH/12_Mon 13-16_CHN E42_Landscape Modelling of Biodiversity/Project/Polygon approach")
+# 
+# for(i in 1:length(list.files("Species occurrences/"))){
+#   data <- read.csv(paste0("Species occurrences/", list.files("Species occurrences/")[i]))
+#   coordinate_flags <- clean_coordinates(x=data, lon="decimalLongitude", lat="decimalLatitude", countries="countryCode", species="scientificName", tests= c("centroids","gbif","institutions","duplicates","seas","zeros"), verbose=T)
+#   data$flags <- as.factor(coordinate_flags$.summary)
+#   data <- subset(data, data$flags=="TRUE")
+#   data <- data[,c("decimalLongitude", "decimalLatitude", "coordinateUncertaintyInMeters", "occurrenceStatus")]
+#   write.csv(data, paste0("Cleaned data/Clean_", list.files("Species occurrences/")[i]))
+# }
+# 
+# library(terra)
+# library(sf)
+# library(CoordinateCleaner)
+# library(raster)
+# 
+# input_dir <- "C:/0_Documents/10_ETH/12_Mon 13-16_CHN E42_Landscape Modelling of Biodiversity/Project/Polygon approach"
+# 
+# source("./range_fun.R")
+# 
+# ### =========================================================================
+# ### Preparations of packages, functions and data ####
+# ### =========================================================================
+# 
+# ### install packages globally
+# 
+# # set a local mirror server
+# options(repos=structure(c(CRAN="https://stat.ethz.ch/CRAN/")))
+# 
+# # Packages to load
+# packages <- list("rgbif", "geometry", "maps", "ClusterR", "mclust", "raster","rgdal" ,"maptools" ,"tools" ,"ecospat" ,"rgeos" ,"PresenceAbsence")
+# 
+# # Install missing ones and load all packages
+# for (p in packages) {
+#   if(!library(package = p, logical.return = TRUE, character.only = TRUE)){
+#     install.packages(p)
+#     library(package = p, character.only = TRUE)
+#   } else {
+#     library(package = p, character.only = TRUE)
+#   }
+# }
+# 
+# 
+# ### Please set the names for output maps for each species, and the length should be the same with input occurrence .csv files
+# ### If this is not set, the names would be the same with the input files.
+# 
+# species_name <- NA # (optional)
+# 
+# ### Default parameter settings:
+# 
+# proj <- CRS("EPSG:4326")   # Spatial projection in which the coordinates of the occurrence data (input) are stored. The output raster of the species range will have the same projection.
+# Climatic_layer <- NA   #(Optional) climate raster (e.g. temperature) used to improve the distribution range (by rejecting cells with unsuitable climate).
+# degrees_outlier <- 15   # distance threshold (degrees) for outlier classification. If the nearest minimal distance to the next point is larger than this threshold, it will be considered as an outlier.
+# clustered_points_outlier <- 2   # maximum number of points which are closer to each other than the degrees_outlier, but should still be considered as outliers.
+# final_resolution <- 0.2   # determines the final resolution of the species range raster.
+# buffer_width_point <- 0.5   # buffer (in degrees) which will be applied around single observations.
+# buffer_increment_point_line <- 0.5   # how much should the buffer be increased for each point on a line.
+# buffer_width_polygon <- 0.1   # buffer (in degrees) which will be applied around distribution polygons (for each bioregion)
+# cut_off <- 0.05   # quantile of temperatures (on each site) which are not considered to be suitable for the species. e.g: cut_off=0.05: lowest and highest 5% of temperature distribution
+# method <- "PCM"   # PCM (percentage cells method) method uses temperature filter only at the edge of range raster, ACM (all cells method) method for all cells.
+# cover_threshold <- 0.3   # only if method=F. Specifies the threshold of proportion of covered area by the range polygon above which the corresponding raster will be classified as "present" without considering the temperature.
+# dest_output='3.1_mapping_Polygons'   # path to where all rasters, plots, log files should be saved (if write_plot/write_raster=T)
+# 
+# 
+# ### Please run following codes to get the polygon maps in the folder "Polygons" under your working directory
+# 
+# 
+# 
+# ### Download data from TNC. The shapefile will be saved in the folder of this script.
+# ### If failed, please download at https://geospatial.tnc.org/datasets/b1636d640ede4d6ca8f5e369f2dc368b/about
+# ### and then unzip and load manually
+# if (!dir.exists("./terr-ecoregions-TNC/")) {
+#   dir.create("./terr-ecoregions-TNC/")
+#   
+#   download.file(url = "https://www.arcgis.com/sharing/rest/content/items/b1636d640ede4d6ca8f5e369f2dc368b/data",
+#                 destfile = "terr-ecoregions-TNC.zip", mode = "wb")
+#   
+#   unzip(zipfile = "terr-ecoregions-TNC.zip", exdir = "./terr-ecoregions-TNC")
+#   
+#   cat(paste0("The TNC bioregion map is downloaded and saved in the folder: \n",  getwd(), "/terr-ecoregions-TNC"))
+# }
+# 
+# list.files("./terr-ecoregions-TNC/", pattern = ".shp")
+# bioregion <- readOGR(dsn="./terr-ecoregions-TNC", layer="tnc_terr_ecoregions")
+# 
+# ### =========================================================================
+# ### Polygon mapping ####
+# ### =========================================================================
+# 
+# ### Load data
+# 
+# species_csv_all <- list.files(pattern = "\\.csv", full.names = T, recursive = T)
+# if (is.na(species_name)){
+#   species_name <- gsub("\\.csv","",list.files(pattern = "\\.csv", recursive = T))}
+# 
+# 
+# ### Load occurrence and map the range
+# for (indexi in 1:length(species_csv_all)){
+#   
+#   species_name_i <- species_name[indexi]
+#   species <- read.csv(species_csv_all[indexi])
+#   
+#   occ_coord <- unique(species[,c("decimalLongitude", "decimalLatitude")])
+#   
+#   print(paste0("working with        ", species_name_i, "         [index:", indexi, "]"))
+#   
+#   species_range <- range.fun(species_name_i, occ_coord, proj=proj,
+#                              Climatic_layer=Climatic_layer, Bioreg=bioregion, Bioreg_name = 'WWF_REALM2',
+#                              final_resolution=final_resolution, degrees_outlier=degrees_outlier, clustered_points_outlier=clustered_points_outlier,
+#                              buffer_width_point=buffer_width_point, buffer_increment_point_line=buffer_increment_point_line, buffer_width_polygon=buffer_width_polygon, cut_off=cut_off,
+#                              method=method, cover_threshold=cover_threshold, desaggregate_points=F,
+#                              write_plot=T, write_raster=T,
+#                              return_raster=T, overwrite=T,dest_output=dest_output)
+#   #,dir_temp="./temp")
+#   
+#   # Bioreg: shapefile containg different bioregions (convex hulls will be classified on a bioreg basis)
+#   # Bioreg_name: how is the slot containing the bioregion names called?
+#   # desaggreagte_points: should close points be desaggregated? Speeds up clustering
+#   
+#   # tmp <- tempfile()
+#   # do.call(file.remove, list(list.files("tmp", full.names = TRUE)))
+# }
+# 
+# cat(paste0("Polygon maps are saved in the folder: \n",  getwd(), "/",dest_output))
+############################################################################################
+#The code above has been run, the files are stored in the repository, please don't run again but access the files directly (Manuel 04/05; 16:10)
+############################################################################################
+
+```
+
+Chunk 4: Re-projecting and cropping all maps to the study area
+
+```{r}
 ## Reprojecting output
-library(sf)
-area <- read_sf("Study area shapefile/study area shapefile.shp")
-area <- area[1]
-
-library(terra)
-condor <- rast("Polygon-based approach/condor_epsg4326_polygon.tif")
-puma <- rast("Polygon-based approach/puma_epsg4326_polygon.tif")
-bear <- rast("Polygon-based approach/bear_epsg4326_polygon.tif")
-
-condor_reprojected <- terra::project(x = condor, y = "ESRI:102033", method = "near")
-puma_reprojected <- terra::project(x = puma, y = "ESRI:102033", method = "near")
-bear_reprojected <- terra::project(x = bear, y = "ESRI:102033", method = "near")
-
-condor_cropped <- crop(condor_reprojected, area)
-condor_cropped <- mask(condor_reprojected, area)
-plot(condor_cropped)
-
-puma_cropped <- crop(puma_reprojected, area)
-puma_cropped <- mask(puma_reprojected, area)
-plot(puma_cropped)
-
-bear_cropped <- crop(bear_reprojected, area)
-bear_cropped <- mask(bear_reprojected, area)
-plot(bear_cropped)
+# library(sf)
+# area <- read_sf("Study area shapefile/study area shapefile.shp")
+# area <- area[1]
+# 
+# library(terra)
+# 
+# 
+# for(i in 1:length(list.files("Polygon-based approach/raster_range"))){
+#   data <- rast(paste0("Polygon-based approach/raster_range/", list.files("Polygon-based approach/raster_range")[i]))
+#   data <- terra::project(x = data, y = "ESRI:102033", method = "near")
+#   data <- crop(data, area)
+#   data <- mask(data, area)
+#   writeRaster(data, paste0("Polygon-based approach/raster_range_reprojected/Reprojected_", list.files("Polygon-based approach/raster_range")[i]))
+# }
 
 ```
 
@@ -2043,5 +2195,3 @@ Briefly explain what the following chunk does.
 ```{r}
 ### your code
 ```
-
-Justine Test
