@@ -24,7 +24,7 @@ Weekly meetings on Tuesdays at 4:15 PM on the green floor in CHN or in F77 (no m
 Summarize and email questions to Monika before the meetings.
 
 | Date        | Progress Milestone                                                                         | Suggested Focus                                                      |
-|------------------|------------------------------|------------------------|
+|--------------|---------------------------------|-------------------------|
 | 03.04-07.04 | Species occurrence data downloaded and cleaned                                             | Data retrieval and cleaning                                          |
 | 10.04-14.05 | Environmental data prepared for model fitting                                              | Environmental exploration                                            |
 | 17.04-21.04 | 1.Initial set of predictors selected 2.Created 1st set of PAs (e.g.: random)               | Environmental predictors ; Pseudoabsence creation (PAs)              |
@@ -876,6 +876,8 @@ The following chunk does the following:
 
 GBM: Gradient boosting machine is an ensemble algorithm that fits boosted decision trees by minimizing an error gradient.
 
+The models are stored in a list in the repository ("fitted_models.rds").
+
 ```{r}
 ########################## Don't run, the bottom chunk performs better
 ## Reading in presence data
@@ -1288,158 +1290,194 @@ for(i in used_preds){
 ```{r}
 ### Possibly better solution: More compact than first chunk (loop)
 
-# Reading in presence data
-condor <- read.csv("Occurrence data/condor_presences_1km.csv")
-puma <- read.csv("Occurrence data/puma_presences_1km.csv")
-bear <- read.csv("Occurrence data/bear_presences_1km.csv")
-
-# Reading in pseudo absences
-pa_random <- read.csv("Pseudo absences/pseudo absences random.csv")
-pa_strat <- read.csv("Pseudo absences/pseudo absences stratified elevation.csv")
-pa_geo_condor <- read.csv("Pseudo absences/pseudo absences geographically weighed condor.csv")
-pa_geo_puma <- read.csv("Pseudo absences/pseudo absences geographically weighed puma.csv")
-pa_geo_bear <- read.csv("Pseudo absences/pseudo absences geographically weighed bear.csv")
-
-# Reading in environmental predictors (adjust path)
-predictors <- rast("predictors.tif")
-
-# Extracting environmental predictors for occurrence and pseudo absence data
-model_matrix_condor <- cbind(condor, extract(predictors, condor[, c("x", "y")], ID = F))
-model_matrix_puma <- cbind(puma, extract(predictors, puma[, c("x", "y")], ID = F))
-model_matrix_bear <- cbind(bear, extract(predictors, bear[, c("x", "y")], ID = F))
-
-pa_random <- cbind(pa_random, extract(predictors, pa_random[, c("x", "y")], ID = F))
-pa_strat <- cbind(pa_strat, extract(predictors, pa_strat[, c("x", "y")], ID = F))
-pa_geo_condor  <- cbind(pa_geo_condor, extract(predictors, pa_geo_condor[, c("x", "y")], ID = F))
-pa_geo_puma  <- cbind(pa_geo_puma, extract(predictors, pa_geo_puma[, c("x", "y")], ID = F))
-pa_geo_bear  <- cbind(pa_geo_bear, extract(predictors, pa_geo_bear[, c("x", "y")], ID = F))
-
-# Removing NAs
-model_matrix_condor <- model_matrix_condor[complete.cases(model_matrix_condor),]
-summary(model_matrix_condor)
-model_matrix_puma <- model_matrix_puma[complete.cases(model_matrix_puma),]
-summary(model_matrix_puma)
-model_matrix_bear <- model_matrix_bear[complete.cases(model_matrix_bear),]
-summary(model_matrix_bear)
-
-# General formula for glm
-form_glm_condor <- Presence ~ temp_avg + I(temp_avg^2) + slope + I(slope^2) + 
-  ndvi_sd + I(ndvi_sd^2) + ndvi_avg + I(ndvi_avg^2) + 
-  buildings_3km + I(buildings_3km^2) + forest_25 + 
-  I(forest_25^2) +prec_sum + I(prec_sum^2) + 
-  water_distance + I(water_distance^2)
-
-form_glm_puma <- Presence ~ temp_avg + I(temp_avg^2) + slope + I(slope^2) + 
-  ndvi_sd + I(ndvi_sd^2) + ndvi_avg + I(ndvi_avg^2) + 
-  buildings_3km + I(buildings_3km^2) + forest_25 + 
-  I(forest_25^2) +prec_sum + I(prec_sum^2) + 
-  water_distance + I(water_distance^2)
-
-form_glm_bear <- Presence ~ temp_avg + I(temp_avg^2) + slope + I(slope^2) + 
-  ndvi_sd + I(ndvi_sd^2) + ndvi_avg + I(ndvi_avg^2) + 
-  buildings_3km + I(buildings_3km^2) + forest_25 + 
-  I(forest_25^2) +prec_sum + I(prec_sum^2) + 
-  water_distance + I(water_distance^2)
-
-# General formula for RF
-
-form_rf_condor <- Presence ~ temp_avg + slope + ndvi_sd + 
-  ndvi_avg + buildings_3km + forest_25 + prec_sum + 
-  water_distance
-
-form_rf_puma <- Presence ~ temp_avg + slope + ndvi_sd + 
-  ndvi_avg + buildings_3km + forest_25 + prec_sum + 
-  water_distance
-
-form_rf_bear <- Presence ~ temp_avg + slope + ndvi_sd + 
-  ndvi_avg + buildings_3km + forest_25 + prec_sum + 
-  water_distance
-
-############## Fill in predictors as appropriate
-
-######################################################################################
-# Fitting models
-######################################################################################
-
-library(misty)
-library(ranger)
-library(gbm)
-
-# Define levels
-spcs <- c("condor", "puma", "bear")
-pseu <- c("random","strat","geo")
-
-# Define empty list
-modli <- list()
-# Loop over species
-for(i in spcs){
-  spc_i <- list() # Empty sublist
-  if(i == "condor"){ # Define presence data
-    pres <- model_matrix_condor
-    form_glm <- form_glm_condor 
-    form_rf <- form_rf_condor
-  } else if (i == "puma") {
-    pres <- model_matrix_puma
-    form_glm <- form_glm_puma 
-    form_rf <- form_rf_puma
-  } else if (i == "bear") {
-    pres <- model_matrix_bear
-    form_glm <- form_glm_bear
-    form_rf <- form_rf_bear
-  }
-  for(j in pseu){ # Loop over pseudo-absences
-    pseu_j <- list() # Empty subsublist
-    if(j == "random"){ # Define pseudoabsences
-      abs <- pa_random
-    } else if(j == "strat"){
-      abs <- pa_strat
-    } else {
-      if(i == "condor"){
-        abs <- pa_geo_condor
-      } else if(i == "puma"){
-        abs <- pa_geo_puma
-      } else if(i == "bear") {
-        abs <- pa_geo_bear
-      }
-    }
-    
-    # Create model matrix
-    dat <- rbind(pres,abs[,colnames(pres)])
-    
-    # Remove duplicates
-    duplicates <- as.numeric(rownames(df.unique(df.duplicated(dat, x, y))))
-    dat <- dat[-duplicates,]
-    
-    # Fit glm
-    glm_bse <- glm(form_glm,
-                     data = dat, family = "binomial")
-    pseu_j$glm <- step(glm_bse, directions = 'both', trace = 0)
-    
-    # Transform response to factor for random forest
-    dat$Presence <- as.factor(dat$Presence)
-    
-    # Fit random forest
-    pseu_j$rf <- ranger(form_rf,
-                               data = dat, num.trees = 500, probability = TRUE, 
-                               min.node.size = 10) ## node size can be decreased for a more complex model
-    # Fit GBM
-    pseu_j$gbm <- gbm(form_rf,
-                      data = dat, distribution = "binomial", cv.folds = 10, shrinkage = 0.1, n.minobsinnode = 10,
-                      n.trees = 500)
-    
-    spc_i[[j]] <- pseu_j # Store output in sublist
-    
-    print(paste(i, j)) # Print loop indices
-  }
-  names(spc_i) <- pseu
-  modli[[i]] <- spc_i  # Store output in list
-}
-
-names(modli) <- spcs
-
-summary(modli$nc$random$simple_glm)
-
-saveRDS(modli, file = "output/Practical_2_fitted_models.rds")
+# ### Possibly better solution: More compact than first chunk (loop)
+# 
+# 
+# setwd("C:/0_Documents/10_ETH/12_Mon 13-16_CHN E42_Landscape Modelling of Biodiversity/Project")
+# library(terra)
+# # Reading in presence data
+# condor <- read.csv("Condor-Landscape-Modelling/Occurrence data/condor_presences_1km.csv")
+# puma <- read.csv("Condor-Landscape-Modelling/Occurrence data/puma_presences_1km.csv")
+# bear <- read.csv("Condor-Landscape-Modelling/Occurrence data/bear_presences_1km.csv")
+# 
+# # Reading in pseudo absences
+# pa_random <- read.csv("Condor-Landscape-Modelling/Pseudo absences/pseudo absences random.csv")
+# pa_strat <- read.csv("Condor-Landscape-Modelling/Pseudo absences/pseudo absences stratified temperature precipitation.csv")
+# pa_geo_condor <- read.csv("Condor-Landscape-Modelling/Pseudo absences/pseudo absences geographically weighed condor.csv")
+# pa_geo_puma <- read.csv("Condor-Landscape-Modelling/Pseudo absences/pseudo absences geographically weighed puma.csv")
+# pa_geo_bear <- read.csv("Condor-Landscape-Modelling/Pseudo absences/pseudo absences geographically weighed bear.csv")
+# 
+# # Reading in environmental predictors (adjust path)
+# predictors_condor <- rast("predictors_condor.tif")
+# predictors_bear <- rast("predictors_bear.tif")
+# predictors_puma <- rast("predictors_puma.tif")
+# 
+# predictors <- predictors_puma
+# 
+# names(predictors_condor)
+# names(predictors_puma)
+# names(predictors_bear)
+# 
+# 
+# # Extracting environmental predictors for occurrence and pseudo absence data
+# model_matrix_condor <- cbind(condor, extract(predictors_condor, condor[, c("x", "y")], ID = F))
+# model_matrix_puma <- cbind(puma, extract(predictors_puma, puma[, c("x", "y")], ID = F))
+# model_matrix_bear <- cbind(bear, extract(predictors_bear, bear[, c("x", "y")], ID = F))
+# 
+# pa_random <- cbind(pa_random, extract(predictors_puma, pa_random[, c("x", "y")], ID = F))
+# pa_strat <- cbind(pa_strat, extract(predictors_puma, pa_strat[, c("x", "y")], ID = F))
+# pa_geo_condor  <- cbind(pa_geo_condor, extract(predictors_condor, pa_geo_condor[, c("x", "y")], ID = F))
+# pa_geo_puma  <- cbind(pa_geo_puma, extract(predictors_puma, pa_geo_puma[, c("x", "y")], ID = F))
+# pa_geo_bear  <- cbind(pa_geo_bear, extract(predictors_puma, pa_geo_bear[, c("x", "y")], ID = F))
+# 
+# # Removing NAs
+# model_matrix_condor <- model_matrix_condor[complete.cases(model_matrix_condor),]
+# summary(model_matrix_condor)
+# model_matrix_puma <- model_matrix_puma[complete.cases(model_matrix_puma),]
+# summary(model_matrix_puma)
+# model_matrix_bear <- model_matrix_bear[complete.cases(model_matrix_bear),]
+# summary(model_matrix_bear)
+# 
+# # General formula for glm
+# form_glm_condor <- Presence ~
+#   temp_mean_annual + I(temp_mean_annual^2) +
+#   temp_range + I(temp_range^2) + 
+#   prec_annual + I(prec_annual^2) + 
+#   tree_cover + I(tree_cover^2) + 
+#   pop_dens + I(pop_dens^2) + 
+#   aspect + I(aspect^2) + 
+#   slope + I(slope^2) + 
+#   water_bodies + I(water_bodies^2)
+# 
+# form_glm_puma <- Presence ~
+#   temp_mean_annual + I(temp_mean_annual^2) +
+#   temp_range + I(temp_range^2) + 
+#   prec_annual + I(prec_annual^2) + 
+#   prec_driest_month + I(prec_driest_month^2) + 
+#   tree_cover + I(tree_cover^2) + 
+#   pop_dens + I(pop_dens^2) + 
+#   aspect + I(aspect^2) + 
+#   slope + I(slope^2) + 
+#   water_bodies + I(water_bodies^2)
+# 
+# form_glm_bear <- Presence ~
+#   temp_mean_annual + I(temp_mean_annual^2) +
+#   temp_range + I(temp_range^2) + 
+#   prec_annual + I(prec_annual^2) + 
+#   prec_driest_month + I(prec_driest_month^2) + 
+#   tree_cover + I(tree_cover^2) + 
+#   pop_dens + I(pop_dens^2) + 
+#   aspect + I(aspect^2) + 
+#   slope + I(slope^2) + 
+#   water_bodies + I(water_bodies^2)
+# 
+# # General formula for RF
+# 
+# form_rf_condor <- Presence ~ temp_mean_annual + temp_range + prec_annual + tree_cover + pop_dens +
+#   aspect + slope + water_bodies
+#   
+# form_rf_puma <- Presence ~ temp_mean_annual + temp_range + prec_annual + prec_driest_month + tree_cover + pop_dens +
+#   aspect + slope + water_bodies
+# 
+# form_rf_bear <- Presence ~ temp_mean_annual + temp_range + prec_annual + prec_driest_month + tree_cover + pop_dens +
+#   aspect + slope + water_bodies
+# 
+# 
+# ######################################################################################
+# # Fitting models
+# ######################################################################################
+# 
+# library(misty)
+# library(ranger)
+# library(gbm)
+# 
+# # Define levels
+# spcs <- c("condor", "puma", "bear")
+# pseu <- c("random","strat","geo")
+# 
+# # Define empty list
+# modli <- list()
+# # Loop over species
+# for(i in spcs){
+#   spc_i <- list() # Empty sublist
+#   if(i == "condor"){ # Define presence data
+#     pres <- model_matrix_condor
+#     form_glm <- form_glm_condor 
+#     form_rf <- form_rf_condor
+#   } else if (i == "puma") {
+#     pres <- model_matrix_puma
+#     form_glm <- form_glm_puma 
+#     form_rf <- form_rf_puma
+#   } else if (i == "bear") {
+#     pres <- model_matrix_bear
+#     form_glm <- form_glm_bear
+#     form_rf <- form_rf_bear
+#   }
+#   for(j in pseu){ # Loop over pseudo-absences
+#     pseu_j <- list() # Empty subsublist
+#     if(j == "random"){ # Define pseudoabsences
+#       abs <- pa_random
+#     } else if(j == "strat"){
+#       abs <- pa_strat
+#     } else {
+#       if(i == "condor"){
+#         abs <- pa_geo_condor
+#       } else if(i == "puma"){
+#         abs <- pa_geo_puma
+#       } else if(i == "bear") {
+#         abs <- pa_geo_bear
+#       }
+#     }
+#     
+#     # Create model matrix
+#     dat <- rbind(pres,abs[,colnames(pres)])
+#     dat <- na.omit(dat)
+#     
+#     # Remove duplicates
+#     # duplicates <- as.numeric(rownames(df.unique(df.duplicated(dat, x, y))))
+#     # dat <- dat[-duplicates,]
+#     
+#     # Fit glm
+#     glm_bse <- glm(form_glm,
+#                    data = dat, family = "binomial")
+#     pseu_j$glm <- step(glm_bse, directions = 'both', trace = 0)
+#     
+# 
+#     # Fit GBM
+#     dat$Presence <- as.numeric(dat$Presence)
+#     
+#     gbm1 <- gbm(form_rf,
+#                 data = dat, distribution = "bernoulli", cv.folds = 10, shrinkage = 0.1, n.minobsinnode = 10,
+#                 n.trees = 500)
+#     
+#     pseu_j$gbm <- gbm1
+#     
+#     # Fit random forest
+#     dat$Presence <- as.factor(dat$Presence)
+#     
+#     pseu_j$rf <- ranger(form_rf,
+#                         data = dat, num.trees = 500, probability = TRUE, 
+#                         min.node.size = 10) ## node size can be decreased for a more complex model
+#     
+#     
+# 
+#     
+#     spc_i[[j]] <- pseu_j # Store output in sublist
+#     
+#     print(paste(i, j)) # Print loop indices
+#   }
+#   names(spc_i) <- pseu
+#   modli[[i]] <- spc_i  # Store output in list
+# }
+# 
+# names(modli) <- spcs
+# 
+# summary(modli$condor$random$glm)
+# 
+# saveRDS(modli, file = "fitted_models.rds")
+############################################################################################
+#The code above has been run, the files are stored in the repository, please don't run again but access the files directly (Manuel 10/05; 18:10)
+############################################################################################
 ```
 
 ## Chunk 6: Model Evaluation (Justine & Tanja)
