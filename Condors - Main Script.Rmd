@@ -24,7 +24,7 @@ Weekly meetings on Tuesdays at 4:15 PM on the green floor in CHN or in F77 (no m
 Summarize and email questions to Monika before the meetings.
 
 | Date        | Progress Milestone                                                                         | Suggested Focus                                                      |
-|--------------|---------------------------------|-------------------------|
+|-----------------|-------------------------------|------------------------|
 | 03.04-07.04 | Species occurrence data downloaded and cleaned                                             | Data retrieval and cleaning                                          |
 | 10.04-14.05 | Environmental data prepared for model fitting                                              | Environmental exploration                                            |
 | 17.04-21.04 | 1.Initial set of predictors selected 2.Created 1st set of PAs (e.g.: random)               | Environmental predictors ; Pseudoabsence creation (PAs)              |
@@ -747,7 +747,9 @@ dem <- as(dem, "SpatRaster")
 
 Extracting environmental conditions for presences and absences:
 
-    df_pres_aa <- cbind(extract(environmental_predictors,crd_aa_thin), crd_aa_thin)
+```         
+df_pres_aa <- cbind(extract(environmental_predictors,crd_aa_thin), crd_aa_thin)
+```
 
 Code for reprojection:
 
@@ -879,418 +881,6 @@ GBM: Gradient boosting machine is an ensemble algorithm that fits boosted decisi
 The models are stored in a list in the repository ("fitted_models.rds").
 
 ```{r}
-########################## Don't run, the bottom chunk performs better
-## Reading in presence data
-condor <- read.csv("Occurrence data/condor_presences_1km.csv")
-puma <- read.csv("Occurrence data/puma_presences_1km.csv")
-bear <- read.csv("Occurrence data/bear_presences_1km.csv")
-
-## Reading in absence data
-absences_random <- read.csv("Pseudo absences/pseudo absences random.csv")
-
-## Combining the two dataframes and removing pseudo absences
-# Condor
-pre_crd_condor <- data.frame(x = condor$x, y = condor$y, Presence = condor$Presence)
-abs_crd <- data.frame(x = absences_random$x, y = absences_random$y, Presence = absences_random$Presence)
-abs <- rbind(abs_crd, pre_crd_condor) # absences first, as we will extract those
-library(misty)
-duplicates <- as.numeric(rownames(df.unique(df.duplicated(abs, x, y))))
-condor <- abs[-duplicates,]
-
-# Puma
-pre_crd_puma <- data.frame(x = puma$x, y = puma$y, Presence = puma$Presence)
-abs_crd <- data.frame(x = absences_random$x, y = absences_random$y, Presence = absences_random$Presence)
-abs <- rbind(abs_crd, pre_crd_puma) # absences first, as we will extract those
-library(misty)
-duplicates <- as.numeric(rownames(df.unique(df.duplicated(abs, x, y))))
-puma <- abs[-duplicates,]
-
-# Bear
-pre_crd_bear <- data.frame(x = bear$x, y = bear$y, Presence = bear$Presence)
-abs_crd <- data.frame(x = absences_random$x, y = absences_random$y, Presence = absences_random$Presence)
-abs <- rbind(abs_crd, pre_crd_bear) # absences first, as we will extract those
-library(misty)
-duplicates <- as.numeric(rownames(df.unique(df.duplicated(abs, x, y))))
-bear <- abs[-duplicates,]
-
-# Reading in environmental predictors (adjust path)
-predictors <- rast("predictors.tif")
-
-# Extracting environmental predictors (element predictors)
-model_matrix_condor <- cbind(condor, extract(predictors, condor[, c("x", "y")], ID = F))
-model_matrix_puma <- cbind(puma, extract(predictors, puma[, c("x", "y")], ID = F))
-model_matrix_bear <- cbind(bear, extract(predictors, bear[, c("x", "y")], ID = F))
-
-# Removing NAs
-model_matrix_condor <- model_matrix_condor[complete.cases(model_matrix_condor),]
-summary(model_matrix_condor)
-model_matrix_puma <- model_matrix_puma[complete.cases(model_matrix_puma),]
-summary(model_matrix_puma)
-model_matrix_bear <- model_matrix_bear[complete.cases(model_matrix_bear),]
-summary(model_matrix_bear)
-
-
-####################################################################################
-# GLM
-####################################################################################
-
-# Define formula
-form_base_condor <- Presence ~ predictorname1 + I(predictorname1^2) + ...
-form_base_puma <- Presence ~ predictorname1 + I(predictorname1^2) + ...
-form_base_bear <- Presence ~ predictorname1 + I(predictorname1^2) + ...
-
-# Fit full model
-glm_condor_full <- glm(form_base_condor, data = model_matrix_condor, family = 'binomial')
-summary(glm_condor_full)
-glm_puma_full <- glm(form_base_puma, data = model_matrix_puma, family = 'binomial')
-summary(glm_puma_full)
-glm_bear_full <- glm(form_base_bear, data = model_matrix_bear, family = 'binomial')
-summary(glm_bear_full)
-
-## Stepwise model optimization
-glm_condor_step <- step(glm_condor_full, directions = 'both', trace = 0)
-summary(glm_condor_step)
-glm_puma_step <- step(glm_puma_full, directions = 'both', trace = 0)
-summary(glm_puma_step)
-glm_bear_step <- step(glm_bear_full, directions = 'both', trace = 0)
-summary(glm_bear_step)
-
-## Check effect of simpler model on adjD2
-ecospat.adj.D2.glm(glm_condor_full)
-ecospat.adj.D2.glm(glm_condor_step)
-ecospat.adj.D2.glm(glm_puma_full)
-ecospat.adj.D2.glm(glm_puma_step)
-ecospat.adj.D2.glm(glm_bear_full)
-ecospat.adj.D2.glm(glm_bear_step)
-
-# Generating response curves #################################################
-
-env <- values(predictors)
-
-# Extract minima, maxima, and medians
-env_stats <-apply(env, 2, quantile, probs = c(0,.5,1), na.rm = TRUE) 
-round(env_stats, digits = 2)
-
-# Identifying the predictors in the step GLM
-all_preds # Get all predictor names
-
-### Condor
-# Check for each whether it is in the model equation
-preds_glm <- vector()
-for(i in all_preds){
-  preds_glm[i] <- grepl(i, as.character(glm_condor_step$formula)[3]) 
-}
-
-# Get subset of predictors that are contained in the model equation
-used_preds <- all_preds[preds_glm]
-
-# Prepare raw prediction data set (200 replicates of medians for all predictors)
-predat_raw <- as.data.frame(env_stats[rep(2,200), all_preds])
-
-# Prepare plotting window
-par(mfrow=c(3,3), cex = 1, mar = c(4,4,1,1))
-
-# Loop over used predictors
-for(i in used_preds){
-  
-  # Create data set for prediction
-  predat_i <- predat_raw
-  
-  # Create sequence for the variable of interest (min to max in 200 steps)
-  predat_i[,i] <- seq(env_stats[1,i], env_stats[3,i], length.out = 200)
-  
-  # Create plot frame for response curves of predictor i
-  plot(1,1,ylim=c(0,1),xlim=env_stats[c(1,3),i], type = "n", 
-       ylab = "Occurrence probability", xlab = i)
-  
-  # Predict nutcracker
-  prd_condor_i <- predict(glm_condor_step, newdata = predat_i, type = "response", se.fit = TRUE)
-  
-  # Add polygon for standard error
-  polygon(c(predat_i[,i], rev(predat_i[,i]), predat_i[1,i]),
-          c(prd_condor_i$fit + prd_condor_i$se.fit, rev(prd_condor_i$fit - prd_condor_i$se.fit), 
-            prd_condor_i$fit[1] + prd_condor_i$se.fit[1]),
-          col = "#e5f5f9", border = FALSE)
-  
-  # Add line for prediction
-  lines(predat_i[,i], prd_condor_i$fit, col = "#2ca25f")
-  
-  # Add observations
-  points(model_matrix_condor[,i], model_matrix_condor$Presence, pch = "I", col = "#00000050")## this line has to be revisited
-  
-  # Redraw panel box
-  box()
-}
-
-### Puma
-# Check for each whether it is in the model equation
-preds_glm <- vector()
-for(i in all_preds){
-  preds_glm[i] <- grepl(i, as.character(glm_puma_step$formula)[3]) 
-}
-
-# Get subset of predictors that are contained in the model equation
-used_preds <- all_preds[preds_glm]
-
-# Prepare raw prediction data set (200 replicates of medians for all predictors)
-predat_raw <- as.data.frame(env_stats[rep(2,200), all_preds])
-
-# Prepare plotting window
-par(mfrow=c(3,3), cex = 1, mar = c(4,4,1,1))
-
-# Loop over used predictors
-for(i in used_preds){
-  
-  # Create data set for prediction
-  predat_i <- predat_raw
-  
-  # Create sequence for the variable of interest (min to max in 200 steps)
-  predat_i[,i] <- seq(env_stats[1,i], env_stats[3,i], length.out = 200)
-  
-  # Create plot frame for response curves of predictor i
-  plot(1,1,ylim=c(0,1),xlim=env_stats[c(1,3),i], type = "n", 
-       ylab = "Occurrence probability", xlab = i)
-  
-  # Predict nutcracker
-  prd_puma_i <- predict(glm_puma_step, newdata = predat_i, type = "response", se.fit = TRUE)
-  
-  # Add polygon for standard error
-  polygon(c(predat_i[,i], rev(predat_i[,i]), predat_i[1,i]),
-          c(prd_puma_i$fit + prd_puma_i$se.fit, rev(prd_puma_i$fit - prd_puma_i$se.fit), 
-            prd_puma_i$fit[1] + prd_puma_i$se.fit[1]),
-          col = "#e5f5f9", border = FALSE)
-  
-  # Add line for prediction
-  lines(predat_i[,i], prd_puma_i$fit, col = "#2ca25f")
-  
-  # Add observations
-  points(model_matrix_puma[,i], model_matrix_puma$Presence, pch = "I", col = "#00000050")## this line has to be revisited
-  
-  # Redraw panel box
-  box()
-}
-
-### Bear
-# Check for each whether it is in the model equation
-preds_glm <- vector()
-for(i in all_preds){
-  preds_glm[i] <- grepl(i, as.character(glm_bear_step$formula)[3]) 
-}
-
-# Get subset of predictors that are contained in the model equation
-used_preds <- all_preds[preds_glm]
-
-# Prepare raw prediction data set (200 replicates of medians for all predictors)
-predat_raw <- as.data.frame(env_stats[rep(2,200), all_preds])
-
-# Prepare plotting window
-par(mfrow=c(3,3), cex = 1, mar = c(4,4,1,1))
-
-# Loop over used predictors
-for(i in used_preds){
-  
-  # Create data set for prediction
-  predat_i <- predat_raw
-  
-  # Create sequence for the variable of interest (min to max in 200 steps)
-  predat_i[,i] <- seq(env_stats[1,i], env_stats[3,i], length.out = 200)
-  
-  # Create plot frame for response curves of predictor i
-  plot(1,1,ylim=c(0,1),xlim=env_stats[c(1,3),i], type = "n", 
-       ylab = "Occurrence probability", xlab = i)
-  
-  # Predict nutcracker
-  prd_bear_i <- predict(glm_bear_step, newdata = predat_i, type = "response", se.fit = TRUE)
-  
-  # Add polygon for standard error
-  polygon(c(predat_i[,i], rev(predat_i[,i]), predat_i[1,i]),
-          c(prd_bear_i$fit + prd_bear_i$se.fit, rev(prd_bear_i$fit - prd_bear_i$se.fit), 
-            prd_bear_i$fit[1] + prd_bear_i$se.fit[1]),
-          col = "#e5f5f9", border = FALSE)
-  
-  # Add line for prediction
-  lines(predat_i[,i], prd_bear_i$fit, col = "#2ca25f")
-  
-  # Add observations
-  points(model_matrix_bear[,i], model_matrix_bear$Presence, pch = "I", col = "#00000050")## this line has to be revisited
-  
-  # Redraw panel box
-  box()
-}
-
-####################################################################################
-# Random Forest
-####################################################################################
-
-library(ranger)
-form_rf = Presence ~ predictor1 + ...
-rf_condor <- ranger(form_rf, data = model_matrix_condor, num.trees = 500, probability = TRUE)
-rf_condor
-rf_puma <- ranger(form_rf, data = model_matrix_puma, num.trees = 500, probability = TRUE)
-rf_puma
-rf_bear <- ranger(form_rf, data = model_matrix_bear, num.trees = 500, probability = TRUE)
-rf_bear
-
-# Generating response curves ######################################################
-
-### Condor
-# Prepare plotting window
-par(mfrow=c(3,3), cex = 1, mar = c(4,4,1,1))
-
-# Loop over used predictors
-for(i in used_preds){
-  
-  # Create data set for prediction.
-  predat_i <- predat_raw
-  
-  # Create sequence for the variable of interest (min to max in 200 steps)
-  predat_i[,i] <- seq(env_stats[1,i], env_stats[3,i], length.out = 200)
-  
-  # Create plot frame for response curves of predictor i
-  plot(1,1, ylim = c(0,1), xlim = env_stats[c(1,3),i], type = "n", 
-       ylab = "Occurrence probability", xlab = i)
-  
-  # Predict condor
-  prd_i <- predict(rf_condor, data = predat_i, type = "response", predict.all = TRUE)
-  
-  # Do a bootstrap across the all 500 trees to obtain empirical confidence intervals
-  tre_pr <- prd_i$predictions[,2,]  # Tree by tree predictions 
-  boot_reps <- list()
-  for(j in 1:100){ # Loop over bootstrap replicates
-    boot_i <- matrix(NA, ncol = ncol(tre_pr), nrow = nrow(tre_pr))
-    for(k in 1:nrow(tre_pr)){ # Loop over rows (env. gradient)
-      # Resample 500 trees with replacement
-      smp_k <- sample(1:ncol(tre_pr), replace = T)
-      boot_i[k,] = tre_pr[k,smp_k] # Generate an ensemble of resampled trees
-    }
-    boot_reps[[j]] <- rowMeans(boot_i) # Calculate probabilities from the ensemble
-  }
-  mat_boot <- do.call("cbind", boot_reps)
-  # Obtain median and confidence intervals from the resampled probabilities
-  confi_i <- apply(mat_boot, 1, quantile, probs = c(0.025,0.5,0.975)) 
-  
-  # Add polygon for empirical confidence interval
-  polygon(c(predat_i[,i], rev(predat_i[,i]), predat_i[1,i]),
-          c(confi_i[1,], rev(confi_i[3,]), confi_i[1,1]),
-          col = "#e5f5f9", border = FALSE)
-  
-  # Add line for prediction
-  lines(predat_i[,i], rowMeans(tre_pr), col = "#2ca25f")
-  
-  # Add observations
-  points(model_matrix_condor[,i], model_matrix_condor$Presence, pch = "I", col = "#00000050")## this line has to be revisited
-  
-  # Redraw panel box
-  box()
-}
-
-### Puma
-# Prepare plotting window
-par(mfrow=c(3,3), cex = 1, mar = c(4,4,1,1))
-
-# Loop over used predictors
-for(i in used_preds){
-  
-  # Create data set for prediction.
-  predat_i <- predat_raw
-  
-  # Create sequence for the variable of interest (min to max in 200 steps)
-  predat_i[,i] <- seq(env_stats[1,i], env_stats[3,i], length.out = 200)
-  
-  # Create plot frame for response curves of predictor i
-  plot(1,1, ylim = c(0,1), xlim = env_stats[c(1,3),i], type = "n", 
-       ylab = "Occurrence probability", xlab = i)
-  
-  # Predict puma
-  prd_i <- predict(rf_puma, data = predat_i, type = "response", predict.all = TRUE)
-  
-  # Do a bootstrap across the all 500 trees to obtain empirical confidence intervals
-  tre_pr <- prd_i$predictions[,2,]  # Tree by tree predictions 
-  boot_reps <- list()
-  for(j in 1:100){ # Loop over bootstrap replicates
-    boot_i <- matrix(NA, ncol = ncol(tre_pr), nrow = nrow(tre_pr))
-    for(k in 1:nrow(tre_pr)){ # Loop over rows (env. gradient)
-      # Resample 500 trees with replacement
-      smp_k <- sample(1:ncol(tre_pr), replace = T)
-      boot_i[k,] = tre_pr[k,smp_k] # Generate an ensemble of resampled trees
-    }
-    boot_reps[[j]] <- rowMeans(boot_i) # Calculate probabilities from the ensemble
-  }
-  mat_boot <- do.call("cbind", boot_reps)
-  # Obtain median and confidence intervals from the resampled probabilities
-  confi_i <- apply(mat_boot, 1, quantile, probs = c(0.025,0.5,0.975)) 
-  
-  # Add polygon for empirical confidence interval
-  polygon(c(predat_i[,i], rev(predat_i[,i]), predat_i[1,i]),
-          c(confi_i[1,], rev(confi_i[3,]), confi_i[1,1]),
-          col = "#e5f5f9", border = FALSE)
-  
-  # Add line for prediction
-  lines(predat_i[,i], rowMeans(tre_pr), col = "#2ca25f")
-  
-  # Add observations
-  points(model_matrix_puma[,i], model_matrix_puma$Presence, pch = "I", col = "#00000050")## this line has to be revisited
-  
-  # Redraw panel box
-  box()
-}
-
-### Bear
-# Prepare plotting window
-par(mfrow=c(3,3), cex = 1, mar = c(4,4,1,1))
-
-# Loop over used predictors
-for(i in used_preds){
-  
-  # Create data set for prediction.
-  predat_i <- predat_raw
-  
-  # Create sequence for the variable of interest (min to max in 200 steps)
-  predat_i[,i] <- seq(env_stats[1,i], env_stats[3,i], length.out = 200)
-  
-  # Create plot frame for response curves of predictor i
-  plot(1,1, ylim = c(0,1), xlim = env_stats[c(1,3),i], type = "n", 
-       ylab = "Occurrence probability", xlab = i)
-  
-  # Predict bear
-  prd_i <- predict(rf_bear, data = predat_i, type = "response", predict.all = TRUE)
-  
-  # Do a bootstrap across the all 500 trees to obtain empirical confidence intervals
-  tre_pr <- prd_i$predictions[,2,]  # Tree by tree predictions 
-  boot_reps <- list()
-  for(j in 1:100){ # Loop over bootstrap replicates
-    boot_i <- matrix(NA, ncol = ncol(tre_pr), nrow = nrow(tre_pr))
-    for(k in 1:nrow(tre_pr)){ # Loop over rows (env. gradient)
-      # Resample 500 trees with replacement
-      smp_k <- sample(1:ncol(tre_pr), replace = T)
-      boot_i[k,] = tre_pr[k,smp_k] # Generate an ensemble of resampled trees
-    }
-    boot_reps[[j]] <- rowMeans(boot_i) # Calculate probabilities from the ensemble
-  }
-  mat_boot <- do.call("cbind", boot_reps)
-  # Obtain median and confidence intervals from the resampled probabilities
-  confi_i <- apply(mat_boot, 1, quantile, probs = c(0.025,0.5,0.975)) 
-  
-  # Add polygon for empirical confidence interval
-  polygon(c(predat_i[,i], rev(predat_i[,i]), predat_i[1,i]),
-          c(confi_i[1,], rev(confi_i[3,]), confi_i[1,1]),
-          col = "#e5f5f9", border = FALSE)
-  
-  # Add line for prediction
-  lines(predat_i[,i], rowMeans(tre_pr), col = "#2ca25f")
-  
-  # Add observations
-  points(model_matrix_bear[,i], model_matrix_bear$Presence, pch = "I", col = "#00000050")## this line has to be revisited
-  
-  # Redraw panel box
-  box()
-}
-```
-
-```{r}
-### Possibly better solution: More compact than first chunk (loop)
-
-# ### Possibly better solution: More compact than first chunk (loop)
 # 
 # 
 # setwd("C:/0_Documents/10_ETH/12_Mon 13-16_CHN E42_Landscape Modelling of Biodiversity/Project")
@@ -1308,11 +898,9 @@ for(i in used_preds){
 # pa_geo_bear <- read.csv("Condor-Landscape-Modelling/Pseudo absences/pseudo absences geographically weighed bear.csv")
 # 
 # # Reading in environmental predictors (adjust path)
-# predictors_condor <- rast("predictors_condor.tif")
-# predictors_bear <- rast("predictors_bear.tif")
-# predictors_puma <- rast("predictors_puma.tif")
-# 
-# predictors <- predictors_puma
+# predictors_condor <- rast("predictors_condor_new.tif")
+# predictors_bear <- rast("predictors_bear_new.tif")
+# predictors_puma <- rast("predictors_puma_new.tif")
 # 
 # names(predictors_condor)
 # names(predictors_puma)
@@ -1324,11 +912,9 @@ for(i in used_preds){
 # model_matrix_puma <- cbind(puma, extract(predictors_puma, puma[, c("x", "y")], ID = F))
 # model_matrix_bear <- cbind(bear, extract(predictors_bear, bear[, c("x", "y")], ID = F))
 # 
-# pa_random <- cbind(pa_random, extract(predictors_puma, pa_random[, c("x", "y")], ID = F))
-# pa_strat <- cbind(pa_strat, extract(predictors_puma, pa_strat[, c("x", "y")], ID = F))
 # pa_geo_condor  <- cbind(pa_geo_condor, extract(predictors_condor, pa_geo_condor[, c("x", "y")], ID = F))
 # pa_geo_puma  <- cbind(pa_geo_puma, extract(predictors_puma, pa_geo_puma[, c("x", "y")], ID = F))
-# pa_geo_bear  <- cbind(pa_geo_bear, extract(predictors_puma, pa_geo_bear[, c("x", "y")], ID = F))
+# pa_geo_bear  <- cbind(pa_geo_bear, extract(predictors_bear, pa_geo_bear[, c("x", "y")], ID = F))
 # 
 # # Removing NAs
 # model_matrix_condor <- model_matrix_condor[complete.cases(model_matrix_condor),]
@@ -1340,47 +926,21 @@ for(i in used_preds){
 # 
 # # General formula for glm
 # form_glm_condor <- Presence ~
-#   temp_mean_annual + I(temp_mean_annual^2) +
-#   temp_range + I(temp_range^2) + 
-#   prec_annual + I(prec_annual^2) + 
-#   tree_cover + I(tree_cover^2) + 
-#   pop_dens + I(pop_dens^2) + 
-#   aspect + I(aspect^2) + 
-#   slope + I(slope^2) + 
-#   water_bodies + I(water_bodies^2)
+#   dem + I(dem^2) + temp_mean_annual + I(temp_mean_annual^2) + temp_mean_diurnal + I(temp_mean_diurnal^2) + prec_annual + I(prec_annual^2) + tree_cover + I(tree_cover^2) + pop_dens + I(pop_dens^2) + aspect + I(aspect^2) + slope + I(slope^2) + water_bodies + I(water_bodies^2)
 # 
 # form_glm_puma <- Presence ~
-#   temp_mean_annual + I(temp_mean_annual^2) +
-#   temp_range + I(temp_range^2) + 
-#   prec_annual + I(prec_annual^2) + 
-#   prec_driest_month + I(prec_driest_month^2) + 
-#   tree_cover + I(tree_cover^2) + 
-#   pop_dens + I(pop_dens^2) + 
-#   aspect + I(aspect^2) + 
-#   slope + I(slope^2) + 
-#   water_bodies + I(water_bodies^2)
+#   dem + I(dem^2) + temp_mean_annual + I(temp_mean_annual^2) + temp_mean_diurnal + I(temp_mean_diurnal^2) + prec_annual + I(prec_annual^2) + canopy_height + I(canopy_height^2) + pop_dens + I(pop_dens^2) + aspect + I(aspect^2) + slope + I(slope^2) + water_bodies + I(water_bodies^2)
 # 
 # form_glm_bear <- Presence ~
-#   temp_mean_annual + I(temp_mean_annual^2) +
-#   temp_range + I(temp_range^2) + 
-#   prec_annual + I(prec_annual^2) + 
-#   prec_driest_month + I(prec_driest_month^2) + 
-#   tree_cover + I(tree_cover^2) + 
-#   pop_dens + I(pop_dens^2) + 
-#   aspect + I(aspect^2) + 
-#   slope + I(slope^2) + 
-#   water_bodies + I(water_bodies^2)
+#   dem + I(dem^2) + temp_mean_annual + I(temp_mean_annual^2) + temp_range + I(temp_range^2) + prec_annual + I(prec_annual^2) + canopy_height + I(canopy_height^2) + pop_dens + I(pop_dens^2) + aspect + I(aspect^2) + slope + I(slope^2) + water_bodies + I(water_bodies^2)
 # 
 # # General formula for RF
 # 
-# form_rf_condor <- Presence ~ temp_mean_annual + temp_range + prec_annual + tree_cover + pop_dens +
-#   aspect + slope + water_bodies
-#   
-# form_rf_puma <- Presence ~ temp_mean_annual + temp_range + prec_annual + prec_driest_month + tree_cover + pop_dens +
-#   aspect + slope + water_bodies
+# form_rf_condor <- Presence ~ dem+temp_mean_annual+temp_mean_diurnal+prec_annual+tree_cover+pop_dens+aspect+slope+water_bodies
 # 
-# form_rf_bear <- Presence ~ temp_mean_annual + temp_range + prec_annual + prec_driest_month + tree_cover + pop_dens +
-#   aspect + slope + water_bodies
+# form_rf_puma <- Presence ~ dem+temp_mean_annual+temp_mean_diurnal+prec_annual+canopy_height+pop_dens+aspect+slope+water_bodies
+# 
+# form_rf_bear <- Presence ~ dem+temp_mean_annual+temp_range+prec_annual+canopy_height+pop_dens+aspect+slope+water_bodies
 # 
 # 
 # ######################################################################################
@@ -1401,14 +961,20 @@ for(i in used_preds){
 # for(i in spcs){
 #   spc_i <- list() # Empty sublist
 #   if(i == "condor"){ # Define presence data
+#     pa_random <- cbind(pa_random, extract(predictors_condor, pa_random[, c("x", "y")], ID = F))
+#     pa_strat <- cbind(pa_strat, extract(predictors_condor, pa_strat[, c("x", "y")], ID = F))
 #     pres <- model_matrix_condor
-#     form_glm <- form_glm_condor 
+#     form_glm <- form_glm_condor
 #     form_rf <- form_rf_condor
 #   } else if (i == "puma") {
+#     pa_random <- cbind(pa_random, extract(predictors_puma, pa_random[, c("x", "y")], ID = F))
+#     pa_strat <- cbind(pa_strat, extract(predictors_puma, pa_strat[, c("x", "y")], ID = F))
 #     pres <- model_matrix_puma
-#     form_glm <- form_glm_puma 
+#     form_glm <- form_glm_puma
 #     form_rf <- form_rf_puma
 #   } else if (i == "bear") {
+#     pa_random <- cbind(pa_random, extract(predictors_bear, pa_random[, c("x", "y")], ID = F))
+#     pa_strat <- cbind(pa_strat, extract(predictors_bear, pa_strat[, c("x", "y")], ID = F))
 #     pres <- model_matrix_bear
 #     form_glm <- form_glm_bear
 #     form_rf <- form_rf_bear
@@ -1428,42 +994,49 @@ for(i in used_preds){
 #         abs <- pa_geo_bear
 #       }
 #     }
-#     
+# 
 #     # Create model matrix
 #     dat <- rbind(pres,abs[,colnames(pres)])
 #     dat <- na.omit(dat)
-#     
+#     if(i == "condor"){
+#       dat <- dat[1:13875,]
+#     } else if(i == "puma"){
+#       dat <- dat[1:10981,]
+#     } else if(i == "bear") {
+#       dat <- dat[1:10981,]
+#     }
+# 
 #     # Remove duplicates
 #     # duplicates <- as.numeric(rownames(df.unique(df.duplicated(dat, x, y))))
 #     # dat <- dat[-duplicates,]
-#     
+# 
 #     # Fit glm
 #     glm_bse <- glm(form_glm,
 #                    data = dat, family = "binomial")
 #     pseu_j$glm <- step(glm_bse, directions = 'both', trace = 0)
-#     
+# 
 # 
 #     # Fit GBM
 #     dat$Presence <- as.numeric(dat$Presence)
-#     
+# 
 #     gbm1 <- gbm(form_rf,
 #                 data = dat, distribution = "bernoulli", cv.folds = 10, shrinkage = 0.1, n.minobsinnode = 10,
 #                 n.trees = 500)
-#     
+# 
 #     pseu_j$gbm <- gbm1
-#     
+# 
 #     # Fit random forest
 #     dat$Presence <- as.factor(dat$Presence)
-#     
-#     pseu_j$rf <- ranger(form_rf,
-#                         data = dat, num.trees = 500, probability = TRUE, 
-#                         min.node.size = 10) ## node size can be decreased for a more complex model
-#     
-#     
 # 
-#     
+#     pseu_j$rf <- ranger(form_rf,
+#                         data = dat, num.trees = 500, probability = TRUE,
+#                         min.node.size = 10) ## node size can be decreased for a more complex model
+# 
+# 
+# 
+# 
 #     spc_i[[j]] <- pseu_j # Store output in sublist
-#     
+# 
 #     print(paste(i, j)) # Print loop indices
 #   }
 #   names(spc_i) <- pseu
@@ -1474,9 +1047,23 @@ for(i in used_preds){
 # 
 # summary(modli$condor$random$glm)
 # 
+# unique(nrow(modli$condor$random$glm$data),
+#        nrow(modli$condor$geo$glm$data),
+#        nrow(modli$condor$strat$glm$data))
+# 
+# unique(nrow(modli$puma$random$glm$data),
+#     nrow(modli$puma$geo$glm$data),
+#     nrow(modli$puma$strat$glm$data))
+# 
+# unique(nrow(modli$bear$random$glm$data),
+#     nrow(modli$bear$geo$glm$data),
+#     nrow(modli$bear$strat$glm$data))
+# 
+# 
 # saveRDS(modli, file = "fitted_models.rds")
+#
 ############################################################################################
-#The code above has been run, the files are stored in the repository, please don't run again but access the files directly (Manuel 10/05; 18:10)
+#The code above has been run, the files are stored in the repository, please don't run again but access the files directly (Manuel 16/05; 17:50)
 ############################################################################################
 ```
 
