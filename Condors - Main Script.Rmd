@@ -1852,7 +1852,7 @@ The following three basic visualizations are stored in the same folder and displ
 
 ## Chunk 8: Down-scaling to Colombia; Comparison with PA-network (Manuel)
 
-The following chunk acquires a shapefile for Colombia, projects it to ESRI:102033 and crops rasters to it.
+The following chunk acquires a shapefile for Colombia, projects it to ESRI:102033 and crops rasters to it. The GIS processing has been outsourced to QGIS 3.
 
 ```{r}
 
@@ -1881,3 +1881,5 @@ setwd("C:/0_Documents/10_ETH/12_Mon 13-16_CHN E42_Landscape Modelling of Biodive
 PAs <- readOGR()
 
 ```
+
+![](Species%20Richness%20and%20PAs%20Colombia.jpeg)
