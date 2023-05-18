@@ -24,7 +24,7 @@ Weekly meetings on Tuesdays at 4:15 PM on the green floor in CHN or in F77 (no m
 Summarize and email questions to Monika before the meetings.
 
 | Date        | Progress Milestone                                                                         | Suggested Focus                                                      |
-|-----------------|-------------------------------|------------------------|
+|-------------------|------------------------------|------------------------|
 | 03.04-07.04 | Species occurrence data downloaded and cleaned                                             | Data retrieval and cleaning                                          |
 | 10.04-14.05 | Environmental data prepared for model fitting                                              | Environmental exploration                                            |
 | 17.04-21.04 | 1.Initial set of predictors selected 2.Created 1st set of PAs (e.g.: random)               | Environmental predictors ; Pseudoabsence creation (PAs)              |
@@ -1067,7 +1067,44 @@ The models are stored in a list in the repository ("fitted_models.rds").
 ############################################################################################
 ```
 
-## Chunk 6: Model Evaluation (Justine & Tanja)
+The following chunk checks that all models contain the same amount of data per species.
+
+```{r}
+models <- readRDS("fitted_models.rds")
+
+
+unique(nrow(models$condor$random$glm$data),
+       nrow(models$condor$strat$glm$data),
+       nrow(models$condor$geo$glm$data),
+       nrow(models$condor$random$rf$data),
+       nrow(models$condor$strat$rf$data),
+       nrow(models$condor$geo$rf$data),
+       nrow(models$condor$random$gbm$data),
+       nrow(models$condor$strat$gbm$data),
+       nrow(models$condor$geo$gbm$data))
+
+unique(nrow(models$puma$random$glm$data),
+       nrow(models$puma$strat$glm$data),
+       nrow(models$puma$geo$glm$data),
+       nrow(models$puma$random$rf$data),
+       nrow(models$puma$strat$rf$data),
+       nrow(models$puma$geo$rf$data),
+       nrow(models$puma$random$gbm$data),
+       nrow(models$puma$strat$gbm$data),
+       nrow(models$puma$geo$gbm$data))
+
+unique(nrow(models$bear$random$glm$data),
+       nrow(models$bear$strat$glm$data),
+       nrow(models$bear$geo$glm$data),
+       nrow(models$bear$random$rf$data),
+       nrow(models$bear$strat$rf$data),
+       nrow(models$bear$geo$rf$data),
+       nrow(models$bear$random$gbm$data),
+       nrow(models$bear$strat$gbm$data),
+       nrow(models$bear$geo$gbm$data))
+```
+
+## Chunk 6: Model Evaluation and Ensemble (Justine)
 
 Briefly explain what the following chunk does.
 
@@ -1075,9 +1112,15 @@ Briefly explain what the following chunk does.
 ### your code
 ```
 
-## Chunk 7: Polygon-based alternative approach (Manuel)
+## Chunk 7: Creating projections (Tanja)
 
-## Run for all species in excel sheet
+Briefly explain what the following chunk does.
+
+```{r}
+### your code
+```
+
+## Chunk 8: Polygon-based alternative approach (Manuel)
 
 The following scripts have been adapted from Lyu, L. *et al.* (2022) 'An integrated high-resolution mapping shows congruent biodiversity patterns of Fagales and Pinales', *The New Phytologist*, 235(2), pp. 759--772. Available at: <https://doi.org/10.1111/nph.18158>.
 
@@ -1085,9 +1128,11 @@ The first chunk defines the function range_fun, which has been adapted by renoun
 
 The second chunk re-projects the cleaned occurrence data for the three species to the geographic CRS EPSG:4326 and runs the range_fun of the data. The script may not run in the repository, as it requires the download of raster data and the access to a few other files, which, for computational reasons, have not been all uploaded to the repository. The three output rasters are saved in the repository in the folder "Polygon-based approach".
 
-The rasters can be compared to the output from the SDM approach, but may need reprojection to ESRI:102033 as they are currently stored under EPSG:4326.
+The third chunk runs the approach for the 16 large mammal species occurring in Colombia. All output rasters are stored in the repository in the folder "Polygon-based approach".
 
-The following three basic visualizations are stored in the same folder and display the occurrence data (in red) over the generated range (in green):
+In the last chunk, all rasters are reprojected to ESRI:102033 and cropped to the study area.
+
+The following three basic visualizations are stored in the same folder and display the occurrence data (in red) over the generated range (in green): **(Do not use them for the presentation, I will produce better one's in QGIS)**
 
 ![Polygon-based approach output: Condor](Polygon-based%20approach/plot_range/condor_epsg4326_polygon.png)
 
@@ -1095,7 +1140,7 @@ The following three basic visualizations are stored in the same folder and displ
 
 ![Polygon-based approach output: Andean bear](Polygon-based%20approach/plot_range/bear_epsg4326_polygon.png)
 
-Chunk 1: Defining function for polygon-based approach
+**Chunk 1: Defining function for polygon-based approach**
 
 ```{r}
 ##################################################
@@ -1477,7 +1522,7 @@ Chunk 1: Defining function for polygon-based approach
 ############################################################################################
 ```
 
-Chunk 2: 3 study species
+**Chunk 2: 3 study species**
 
 ```{r}
 
@@ -1638,7 +1683,7 @@ Chunk 2: 3 study species
 ############################################################################################
 ```
 
-Chunk 3: 16 large mammal species
+**Chunk 3: 16 large mammal species**
 
 ```{r}
 # setwd("C:/0_Documents/10_ETH/12_Mon 13-16_CHN E42_Landscape Modelling of Biodiversity/Project/Polygon approach")
@@ -1792,7 +1837,7 @@ Chunk 3: 16 large mammal species
 
 ```
 
-Chunk 4: Re-projecting and cropping all maps to the study area
+**Chunk 4: Re-projecting and cropping all maps to the study area**
 
 ```{r}
 ## Reprojecting output
@@ -1813,10 +1858,34 @@ Chunk 4: Re-projecting and cropping all maps to the study area
 
 ```
 
-## Chunk 8: Projection and comparison
+## Chunk 9: Down-scaling to Colombia; Comparison with PA-network (Manuel)
 
-Briefly explain what the following chunk does.
+The following chunk acquires a shapefile for Colombia, projects it to ESRI:102033 and crops rasters to it.
 
 ```{r}
-### your code
+
+## Acquiring Colombia shapefile and storing it
+library(raster)
+colombia <- getData("GADM", country = "COL", level = 0)
+plot(colombia)
+
+library(rgdal)
+writeOGR(colombia, "Study area shapefile/", layer = "Colombia", driver = "ESRI Shapefile")
+
+colombia <- readOGR("Study area shapefile/Colombia.shp")
+
+albers <- CRS("ESRI:102033")
+colombia_albers <- spTransform(colombia, albers)
+
+crs(colombia_albers)
+writeOGR(colombia_albers, "Study area shapefile/", layer = "Colombia_ESRI_102033", driver = "ESRI Shapefile")
+
+## Crop rasters to colombia
+cropped_raster <- crop(raster, colombia_albers)
+cropped_raster <- mask(cropped_raster, colombia_albers)
+
+## Reading in PA network ### Possibly too large, I outsource to QGIS here
+setwd("C:/0_Documents/10_ETH/12_Mon 13-16_CHN E42_Landscape Modelling of Biodiversity/Project/QGIS/Protected_areas_poly")
+PAs <- readOGR()
+
 ```
