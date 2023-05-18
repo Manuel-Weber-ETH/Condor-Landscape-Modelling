@@ -24,7 +24,7 @@ Weekly meetings on Tuesdays at 4:15 PM on the green floor in CHN or in F77 (no m
 Summarize and email questions to Monika before the meetings.
 
 | Date        | Progress Milestone                                                                         | Suggested Focus                                                      |
-|-------------------|------------------------------|------------------------|
+|-------------------|-----------------------------|------------------------|
 | 03.04-07.04 | Species occurrence data downloaded and cleaned                                             | Data retrieval and cleaning                                          |
 | 10.04-14.05 | Environmental data prepared for model fitting                                              | Environmental exploration                                            |
 | 17.04-21.04 | 1.Initial set of predictors selected 2.Created 1st set of PAs (e.g.: random)               | Environmental predictors ; Pseudoabsence creation (PAs)              |
@@ -1104,7 +1104,7 @@ unique(nrow(models$bear$random$glm$data),
        nrow(models$bear$geo$gbm$data))
 ```
 
-## Chunk 6: Model Evaluation and Ensemble (Justine)
+## Chunk 6: Model Evaluation, Projection and Ensemble (Justine & Tanja)
 
 Briefly explain what the following chunk does.
 
@@ -1112,15 +1112,7 @@ Briefly explain what the following chunk does.
 ### your code
 ```
 
-## Chunk 7: Creating projections (Tanja)
-
-Briefly explain what the following chunk does.
-
-```{r}
-### your code
-```
-
-## Chunk 8: Polygon-based alternative approach (Manuel)
+## Chunk 7: Polygon-based alternative approach (Manuel)
 
 The following scripts have been adapted from Lyu, L. *et al.* (2022) 'An integrated high-resolution mapping shows congruent biodiversity patterns of Fagales and Pinales', *The New Phytologist*, 235(2), pp. 759--772. Available at: <https://doi.org/10.1111/nph.18158>.
 
@@ -1858,7 +1850,7 @@ The following three basic visualizations are stored in the same folder and displ
 
 ```
 
-## Chunk 9: Down-scaling to Colombia; Comparison with PA-network (Manuel)
+## Chunk 8: Down-scaling to Colombia; Comparison with PA-network (Manuel)
 
 The following chunk acquires a shapefile for Colombia, projects it to ESRI:102033 and crops rasters to it.
 
