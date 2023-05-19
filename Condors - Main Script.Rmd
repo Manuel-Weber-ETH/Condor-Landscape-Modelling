@@ -23,27 +23,27 @@ Weekly meetings on Tuesdays at 4:15 PM on the green floor in CHN or in F77 (no m
 
 Summarize and email questions to Monika before the meetings.
 
-+------------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
-| Date             | Progress Milestone                                                                         | Suggested Focus                                                      |
-+==================+============================================================================================+======================================================================+
-| 03.04-07.04      | Species occurrence data downloaded and cleaned                                             | Data retrieval and cleaning                                          |
-+------------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
-| 10.04-14.05      | Environmental data prepared for model fitting                                              | Environmental exploration                                            |
-+------------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
-| 17.04-21.04      | 1.Initial set of predictors selected 2.Created 1st set of PAs (e.g.: random)               | Environmental predictors ; Pseudoabsence creation (PAs)              |
-+------------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
-| 24.04-28.04      | Buffered, target-group, environmentally stratified PAs                                     | Pseudoabsence creation (PAs)                                         |
-+------------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
-| 01.05-05.05      | Models fitted and evaluated (at least 2 algorithms)                                        | Model fitting & evaluation                                           |
-+------------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
-| 08.05-12.05      | Evidence of exploring different model parameters, selected ones with best fit and accuracy | Generated predictor response curves, model fitting & model selection |
-+------------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
-| 15.05-19.05      | Creation of ranges (polygons for mammals)                                                  | Alternative approach to SDM                                          |
-+------------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
-| 22.05-26.05      | Overlap of distributions and protected areas                                               | Implications for conservation                                        |
-+------------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
-| 29.05            | Presentation                                                                               |                                                                      |
-+------------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| Date        | Progress Milestone                                                                         | Suggested Focus                                                      |
++=============+============================================================================================+======================================================================+
+| 03.04-07.04 | Species occurrence data downloaded and cleaned                                             | Data retrieval and cleaning                                          |
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| 10.04-14.05 | Environmental data prepared for model fitting                                              | Environmental exploration                                            |
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| 17.04-21.04 | 1.Initial set of predictors selected 2.Created 1st set of PAs (e.g.: random)               | Environmental predictors ; Pseudoabsence creation (PAs)              |
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| 24.04-28.04 | Buffered, target-group, environmentally stratified PAs                                     | Pseudoabsence creation (PAs)                                         |
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| 01.05-05.05 | Models fitted and evaluated (at least 2 algorithms)                                        | Model fitting & evaluation                                           |
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| 08.05-12.05 | Evidence of exploring different model parameters, selected ones with best fit and accuracy | Generated predictor response curves, model fitting & model selection |
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| 15.05-19.05 | Creation of ranges (polygons for mammals)                                                  | Alternative approach to SDM                                          |
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| 22.05-26.05 | Overlap of distributions and protected areas                                               | Implications for conservation                                        |
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| 29.05       | Presentation                                                                               |                                                                      |
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 
 : Preliminary schedule
 
@@ -1114,31 +1114,395 @@ unique(nrow(models$bear$random$glm$data),
 
 ## Chunk 6: Model Evaluation, Projection and Ensemble (Justine & Tanja)
 
-The following chunk makes the model matrices
+The following chunk does the following:
+
+1.  Model Validation: Because only one data set was available, only the cross validation but not the independent validation was performed.
+
+    1.  Create cv predictions
+
+    2.  Calculate thresholds and make confusion matrices
+
+    3.  Calculate and plot threshold dependent validation (Cohen's Kappa & TSS)
+
+    4.  Calculate and plot threshold independent validation (ROC, AUC & Boyce)
+
+2.  After the validation, the best fitted pseudo-absences (1 set per species) and models (2 per species) were selected.
 
 ```{r}
-# load needed data
-##predictors
-predictors_condor<-rast("C:/Users/justi/OneDrive/Studium/Umweltnaturwissenschaften/Landscape Modelling/Condor/Raster drive/predictors_condor_new.tif")
-predictors_puma<-rast("C:/Users/justi/OneDrive/Studium/Umweltnaturwissenschaften/Landscape Modelling/Condor/Raster drive/predictors_puma_new.tif")
-predictors_bear<-rast("C:/Users/justi/OneDrive/Studium/Umweltnaturwissenschaften/Landscape Modelling/Condor/Raster drive/predictors_bear_new.tif")
-
-##presences
-condor <- read.csv("Occurrence data/condor_presences_1km.csv")
-puma <- read.csv("Occurrence data/puma_presences_1km.csv")
-bear <- read.csv("Occurrence data/bear_presences_1km.csv")
-```
-
-The following chunk validates the models
-
-```{r}
-# libraries
+# Load packages
 library(sf)
 library(terra)
 library(raster)
 library(sp)
 library(gbm)
-library(ranger
+library(ranger)
+
+##Model validation
+
+#load models
+fitted_model<-readRDS("C:/Users/justi/OneDrive/Studium/Umweltnaturwissenschaften/Landscape Modelling/Condor/Condor-Landscape-Modelling/fitted_models.rds")
+
+# Subset lists for the species and flatten them 
+condor_fit_models <- unlist(fitted_model$condor, recursive = FALSE) 
+puma_fit_models <- unlist(fitted_model$puma, recursive = FALSE) 
+bear_fit_models <- unlist(fitted_model$bear, recursive = FALSE) 
+
+#Summary models
+summary(condor_fit_models)
+summary(puma_fit_models)
+summary(bear_fit_models)
+
+## Write a custom function to refit models and generate cross-validation predictions 
+cv.model <- function(model, K, dat = model$data){
+  # Randomly define indices for cross-validation folds 
+  k0 <- rep(1:K, each = ceiling(nrow(dat)/K)) 
+  ks <- sample(k0, size = nrow(dat))
+  
+  # Prepare empty data.frame 
+  cvpreds <- rep(NA, nrow(dat))
+  
+  # Loop over the cross-validation folds 
+  for(i in 1:K){
+    train <- dat[ks != i,] 
+    test <- dat[ks == i,]
+    # Convert response to factor for random forest 
+    if("ranger" %in% class(model)){
+      train$Presence <- as.factor(train$Presence) 
+      # Update model on trainig subset 
+      modtmp <- update(model, data = train) 
+      # Predict to the test subset
+      prd <- predict(modtmp, data = test)$predictions[,2] 
+    } else {
+      form.glm <- model$formula 
+      # Update model on trainig subset 
+      modtmp <- update(model, data = train) 
+      # Predict to the test subset
+      prd <- predict(modtmp, newdata = test, type = "response") 
+    } 
+    cvpreds[which(ks == i)] <- prd 
+  } 
+  return(cvpreds) 
+}
+
+## Create cv predictions and store in table 
+### CONDOR 
+cv_prd_condor <- data.frame(ID = 1:nrow(condor_fit_models$random.glm$data), Presence = condor_fit_models$random.glm$data$Presence)
+
+# Loop over flattened model list and predict for each model 
+# Here, you do a for loop, so we can index by name and 
+# select the right data sets which are stored in the fitted 
+#define form_rf again with the predictors for Condor
+form_rf <- Presence ~ dem + temp_mean_annual + temp_mean_diurnal + prec_annual + tree_cover + aspect + slope + water_bodies + pop_dens
+# GLM objects 
+cv_pr_condor <- list() 
+for(i in names(condor_fit_models)){
+  # Infer pseudo-absence sampling from list name 
+  pseu <- strsplit(i, split = "\\.")[[1]][1] 
+  # Pull out model matrix from fitted glm of corresponding 
+  # pseudo-absence sampling strategy 
+  modna <- paste0(pseu,".glm") 
+  predat <- condor_fit_models[[modna]]$data 
+  # Do the cross validation
+  cv_pr_condor[[i]] <- cv.model(condor_fit_models[[i]], dat = predat, K = 5) #cv_pr_condor looks like in excersice
+} 
+
+# Combine to data.frame 
+cv_prd_condor <- cbind(cv_prd_condor, do.call("cbind", cv_pr_condor))
+
+
+### PUMA 
+cv_prd_puma <- data.frame(ID = 1:nrow(puma_fit_models$random.glm$data), Presence = puma_fit_models$random.glm$data$Presence)
+# Loop over flattened model list and predict for each model 
+# Here, you do a for loop, so we can index by name and 
+# select the right data sets which are stored in the fitted 
+#define form_rf again with the predictors for puma
+form_rf <- Presence ~ dem + temp_mean_annual + temp_mean_diurnal + prec_annual + canopy_height + pop_dens + aspect + slope + water_bodies
+# GLM objects 
+cv_pr_puma <- list() 
+for(i in names(puma_fit_models)){
+  # Infer pseudo-absence sampling from list name 
+  pseu <- strsplit(i, split = "\\.")[[1]][1] 
+  # Pull out model matrix from fitted glm of corresponding 
+  # pseudo-absence sampling strategy 
+  modna <- paste0(pseu,".glm") 
+  predat <- puma_fit_models[[modna]]$data 
+  # Do the cross validation
+  cv_pr_puma[[i]] <- cv.model(puma_fit_models[[i]], dat = predat, K = 5) 
+} 
+
+# Combine to data.frame 
+cv_prd_puma <- cbind(cv_prd_puma, do.call("cbind", cv_pr_puma))
+
+### BEAR 
+cv_prd_bear <- data.frame(ID = 1:nrow(bear_fit_models$random.glm$data), Presence = bear_fit_models$random.glm$data$Presence)
+# Loop over flattened model list and predict for each model 
+# Here, you do a for loop, so we can index by name and 
+# select the right data sets which are stored in the fitted 
+#define form_rf again with the predictors for bear
+form_rf <- Presence ~ dem + temp_mean_annual + temp_range + prec_annual + canopy_height + pop_dens + aspect + slope + water_bodies
+# GLM objects 
+cv_pr_bear <- list() 
+for(i in names(bear_fit_models)){
+  # Infer pseudo-absence sampling from list name 
+  pseu <- strsplit(i, split = "\\.")[[1]][1] 
+  # Pull out model matrix from fitted glm of corresponding 
+  # pseudo-absence sampling strategy 
+  modna <- paste0(pseu,".glm") 
+  predat <- bear_fit_models[[modna]]$data 
+  # Do the cross validation
+  cv_pr_bear[[i]] <- cv.model(bear_fit_models[[i]], dat = predat, K = 5) 
+} 
+
+# Combine to data.frame 
+cv_prd_bear <- cbind(cv_prd_bear, do.call("cbind", cv_pr_bear))
+
+cv_prd_list <- list(condor = cv_prd_condor, 
+                    puma = cv_prd_puma, 
+                    bear = cv_prd_bear)
+
+#---------------------------------------------------------------------------------
+# Calculate thresholds 
+
+library(PresenceAbsence)
+
+spcs <- c("condor", "puma", "bear")
+pseu <- c("random", "env_strat", "geo")
+
+cv_thres_list <- list()
+
+for (i in 1: length(spcs)){
+  print(i)
+  
+  cv_thres_list[[spcs[i]]] <- optimal.thresholds(cv_prd_list[[i]])
+  
+}
+
+names(cv_thres_list) <- c("condor", "puma", "bear")
+
+# Confusion Matrix
+
+mods <- names(condor_fit_models)
+cm_ind_condor <- cm_ind_puma <- cm_ind_bear <- cm_cv_condor <- cm_cv_puma <- cm_cv_bear <- list() 
+# loop over models to calculate confusion matrices for the four 
+# combinations of species and validation data sets 
+for(i in 1:length(mods)){
+  
+  cm_cv_condor[[mods[i]]] <- cmx(cv_prd_list$condor, threshold = cv_thres_list$condor[4,mods[i]], which.model = i) 
+  cm_cv_puma[[mods[i]]] <- cmx(cv_prd_list$puma, threshold = cv_thres_list$puma[4,mods[i]], which.model = i)
+  cm_cv_bear[[mods[i]]] <- cmx(cv_prd_list$bear, threshold = cv_thres_list$bear[4,mods[i]], which.model = i) 
+}
+
+cm_cv_list <- list(condor = cm_cv_condor,
+                   puma= cm_cv_puma, 
+                   bear = cm_cv_bear)
+#----------------------------------------------------------------------------------
+#Threshold dependent validation
+
+# Define Kappa function 
+kappa=function(cm){ 
+  a <- cm[1,1]; b = cm[1,2]; c = cm[2,1]; d = cm[2,2] 
+  n <- a + b + c + d
+  out <- ((a+d)/n-((a +b)*(a +c)+(c+d)*(d+b))/n^2)/(1-((a+b)*(a+c)+(c+d)*(d+b))/n^2) 
+  return(out)
+}
+
+# Define TSS function 
+tss=function(cm){ 
+  a <- cm[1,1]; b = cm[1,2]; c = cm[2,1]; d = cm[2,2] 
+  out <- a/(a+c)+d/(b+d)-1 
+  return(out)
+} 
+
+# Calculate Kappa
+
+kappa_stats <- list(cv_condor = sapply(cm_cv_list$condor, kappa),
+                    cv_puma = sapply(cm_cv_list$puma, kappa), 
+                    cv_bear = sapply(cm_cv_list$bear, kappa))
+
+# Calculate TSS
+tss_stats <- list(cv_condor = sapply(cm_cv_list$condor, tss),
+                    cv_puma = sapply(cm_cv_list$puma, tss), 
+                    cv_bear = sapply(cm_cv_list$bear, tss))
+# Plot Kappa 
+library(RColorBrewer) 
+cls <- brewer.pal(6,"Paired")[c(1,2,3)] # Define some nice colors 
+nms <- c("Random", "Env.strat", "Geographic") # Define names of bar groups 
+lgna <- c("GLM", "RF", "GBM") # Define names of colors
+
+par(mfrow = c(1,3), mar = c(3.5,3.8,1.5,1), cex = 1)
+
+## Plot CONDOR 
+barplot(matrix(kappa_stats$cv_condor, nrow = 3), beside = TRUE, ylim = c(0,0.95), ylab = "Kappa", col = cls, main = expression(italic('Vultur gryphus')), names.arg = nms)
+
+## Plot PUMA
+barplot(matrix(kappa_stats$cv_puma, nrow = 3), beside = TRUE, ylim = c(0,0.95), ylab = "Kappa", col = cls, main = expression(italic('Puma concolor')), names.arg = nms)
+legend(x = "topright",legend = lgna, fill = cls, bty = "n")
+
+## Plot BEAR
+barplot(matrix(kappa_stats$cv_bear, nrow = 3), beside = TRUE, ylim = c(0,0.95), ylab = "Kappa", col = cls, main = expression(italic('Tremarctos ornatus')), names.arg = nms)
+
+# Plot TSS 
+par(mfrow = c(1,3), mar = c(3.5,3.8,1.5,1), cex = 1)
+## Plot CONDOR
+barplot(matrix(tss_stats$cv_condor, nrow = 3), beside = TRUE, ylim = c(0,0.9),
+        ylab = "TSS", col = cls, main = expression(italic('Vultur gryphus')), 
+        names.arg = nms)
+
+## Plot PUMA
+barplot(matrix(tss_stats$cv_puma, nrow = 3), beside = TRUE, ylim = c(0,0.9),
+        ylab = "TSS", col = cls, main = expression(italic('Puma concolor')), 
+        names.arg = nms)
+legend("topright",legend = lgna, fill = cls, bty = "n")
+
+## Plot BEAR
+barplot(matrix(tss_stats$cv_bear, nrow = 3), beside = TRUE, ylim = c(0,0.9),
+        ylab = "TSS", col = cls, main = expression(italic('Tremarctos ornatus')), 
+        names.arg = nms)
+
+#-----------------------------------------------------------------------
+# Threshold-independent validation metrics: ROC, AUC, Boyce Index
+# ROC
+
+# Generate ROC curves
+library(AUC)
+
+# We first write a small wrapper function that reformats the data
+# to fit the requirements of the 'roc' function.
+roc_wrap <- function(prd){
+  
+  l_roc <- list()
+  # Loop over model predictions
+  obs <- as.factor(prd$Presence)
+  
+  for(i in 3:ncol(prd)){
+    l_roc[[i-2]] <- roc(prd[,i],obs)
+  }
+  names(l_roc) <- colnames(prd)[3:ncol(prd)]
+  return(l_roc)
+}
+
+# Calculate ROC curves
+roc_curves <- list(cv_condor = roc_wrap(cv_prd_list$condor),
+                   cv_puma = roc_wrap(cv_prd_list$puma),
+                   cv_bear = roc_wrap(cv_prd_list$bear))
+# Plot ROC curves
+cls2 <- rep(cls, 4) # Define colors
+ltys <- rep(1:3, each = 4) # Define line types
+
+par(mfrow = c(1,3), mar = c(4,3.8,1.5,1), cex = 1, xpd=TRUE)
+plot(roc_curves$cv_condor$random.glm, main = expression(italic('Vultur gryphus')), 
+     lty = ltys[1], col = cls2[1])
+for(i in 2:length(roc_curves$cv_condor)){
+  plot(roc_curves$cv_condor[[i]], add = T, lty = ltys[i], col = cls2[i])
+}
+
+plot(roc_curves$cv_puma$random.glm, main = expression(italic('Puma concolor')), 
+     lty = ltys[1], col = cls2[1])
+for(i in 2:length(roc_curves$cv_puma)){
+  plot(roc_curves$cv_puma[[i]], add = T, lty = ltys[i], col = cls2[i])
+}
+
+plot(roc_curves$cv_bear$random.glm, main = expression(italic('Tremarctos ornatus')), 
+     lty = ltys[1], col = cls2[1])
+for(i in 2:length(roc_curves$cv_bear)){
+  plot(roc_curves$cv_bear[[i]], add = T, lty = ltys[i], col = cls2[i])
+}
+
+legend("bottomright", lty = c(1,2,3,1,1,1,1), col = c(rep("grey20",3), cls), cex = 0.5,
+       legend = c(nms, lgna))
+
+# AUC
+
+# Calculate AUC from ROC-curves
+auc_stats <- lapply(roc_curves, function(x){
+  auc_i <- sapply(x, auc)
+  return(auc_i)
+})
+
+# Plot AUC plots
+par(mfrow = c(1,3), mar = c(3.5,3.8,1.5,1), cex = 1)
+
+barplot(matrix(auc_stats$cv_condor, nrow = 3), beside = TRUE, ylim = c(0.5,1), yaxt = "n",
+        ylab = "AUC", col = cls, main = expression(italic('Vultur gryphus')), 
+        names.arg = nms, xpd = F)
+axis(2, at = 5:10/10)
+
+barplot(matrix(auc_stats$cv_puma, nrow = 3), beside = TRUE, ylim = c(0.5,1), yaxt = "n",
+        ylab = "AUC", col = cls, main = expression(italic('Puma concolor')), 
+        names.arg = nms, xpd = F)
+axis(2, at = 5:10/10)
+legend("topright",legend = lgna, fill = cls, bty = "n", cex = 0.8)
+
+barplot(matrix(auc_stats$cv_bear, nrow = 3), beside = TRUE, ylim = c(0.5,1), yaxt = "n",
+        ylab = "AUC", col = cls, main = expression(italic('Tremarctos ornatus')), 
+        names.arg = nms, xpd = F)
+axis(2, at = 5:10/10)
+
+boyce_output <- list(cv_condor = boyce_wrap(cv_prd_condor),
+                     cv_puma = boyce_wrap(cv_prd_puma),
+                     cv_bear = boyce_wrap(cv_prd_bear))
+
+# Plot association between habitat suitability, and predicted-to-expected ratio
+ylb = "Predicted/Expected ratio (rescaled)" # Define y-label
+xlb = "Habitat suitability" # Define x-label
+
+par(mfrow = c(1,3), mar = c(4,3.8,1.5,1), cex = 1)
+plot(boyce_output$cv_condor$random.glm$HS, 
+     scale(boyce_output$cv_condor$random.glm$F.ratio), xlab = xlb, 
+     lty = ltys[1], main = expression(italic('Vultur gryphus') ), 
+     ylab = ylb, col = cls2[1], cex = 0.75, type = "l", ylim = c(-2,2.8), xlim = c(0,1))
+for(i in 2:length(boyce_output$cv_condor)){
+  lines(boyce_output$cv_condor[[i]]$HS, scale(boyce_output$cv_condor[[i]]$F.ratio), add = T, 
+        lty = ltys[i], col = cls2[i])
+}
+
+plot(boyce_output$cv_puma$random.glm$HS, 
+     scale(boyce_output$cv_puma$random.glm$F.ratio), xlab = xlb, 
+     lty = ltys[1], main = expression(italic('Puma concolor') ), 
+     ylab = ylb, col = cls2[1], cex = 0.75, type = "l", ylim = c(-2,2.8), xlim = c(0,1))
+for(i in 2:length(boyce_output$cv_puma)){
+  lines(boyce_output$cv_puma[[i]]$HS, scale(boyce_output$cv_puma[[i]]$F.ratio), add = T, 
+        lty = ltys[i], col = cls2[i])
+}
+
+plot(boyce_output$cv_bear$random.glm$HS, 
+     scale(boyce_output$cv_bear$random.glm$F.ratio), xlab = xlb, 
+     lty = ltys[1], main = expression(italic('Tremarctos ornatus') ), 
+     ylab = ylb, col = cls2[1], cex = 0.75, type = "l", ylim = c(-2,2.8), xlim = c(0,1))
+for(i in 2:length(boyce_output$cv_bear)){
+  lines(boyce_output$cv_bear[[i]]$HS, scale(boyce_output$cv_bear[[i]]$F.ratio), add = T, 
+        lty = ltys[i], col = cls2[i])
+}
+legend("topright",lty = c(1,2,3,1,1,1,1), col = c(rep("grey",3), cls), cex = 0.5,
+       legend = c(nms, lgna))
+
+# Calculate Boyce indices from output
+boyce_stats <- lapply(boyce_output, function(x){
+  boyce_i <- sapply(x,function(y){return(y$cor)})
+  return(boyce_i)
+})
+# Plot
+par(mfrow = c(1,3), mar = c(3.5,3.8,1.5,1), cex = 1)
+
+barplot(matrix(boyce_stats$cv_condor, nrow = 3), beside = TRUE, ylim = c(0,1.3), yaxt = "n",
+        ylab = "Boyce index", col = cls, main = expression(italic('Vultur gryphus')), 
+        names.arg = nms, xpd = F)
+axis(2, at = -2:5/5)
+
+barplot(matrix(boyce_stats$cv_puma, nrow = 3), beside = TRUE, ylim = c(0,1.3), yaxt = "n",
+        ylab = "Boyce index", col = cls, main =  expression(italic('Puma concolor')), 
+        names.arg = nms, xpd = F)
+axis(2, at = -2:5/5)
+
+barplot(matrix(boyce_stats$cv_bear, nrow = 3), beside = TRUE, ylim = c(0,1.3), yaxt = "n",
+        ylab = "Boyce index", col = cls, main =  expression(italic('Tremarctos ornatus')), 
+        names.arg = nms, xpd = F)
+axis(2, at = -2:5/5)
+legend("topright",legend = lgna,
+       fill = cls, bty = "n")
+```
+
+```{}
 ```
 
 ## Chunk 7: Polygon-based alternative approach (Manuel)
