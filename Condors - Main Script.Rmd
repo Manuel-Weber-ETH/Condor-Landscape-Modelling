@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Main Script
 
-Students: Justine DeGroote, Tanja Falasca, Manuel Weber
+Students: Justine De Groote, Tanja Falasca, Manuel Weber
 
 Supervisor: Monika K. Goralczyk
 
@@ -67,7 +67,7 @@ Some information about habitat and diet of the 3 focal species
 
 -   [forest%20to%20thorny%20dry%20forest.](https://nationalzoo.si.edu/animals/andean-bear#:~:text=Andean%20bears%20live%20in%20a,forest%20to%20thorny%20dry%20forest.){.uri} <https://animalia.bio/south-american-cougar>
 
-## Chunk 1: Species Occurrence Data Acquisition (Manuel)
+## Chunk 1: Species Occurrence Data Acquisition
 
 This chunk acquires occurrence data of the Andean Condor, the Puma and the Andean Bear from GBIF. The data is limited to geo-referenced data points from South America, recorded between 2000 and 2023. The raw data is saved in the repository in the folder "Occurrence data" under "gbi\_*species abbreviation*.csv".
 
@@ -113,9 +113,9 @@ This chunk acquires occurrence data of the Andean Condor, the Puma and the Andea
 
 ```
 
-## Chunk 2: Species Occurrence Data Cleaning and Thinning (Manuel)
+## Chunk 2: Species Occurrence Data Cleaning and Thinning 
 
-The following chunk cleans the data ( among others: removal of duplicates, zeros, points referenced to seas or research institutions). It proceeds by extracting essential columns (coordinates, uncertainties and occurrence status) and cropping the data to northern South America, by using the mean latitude of the condor occurrence data as cut-off line. The uncertainty of the cleaned data was then quantified as follows:
+The following chunk cleans the data (among others: removal of duplicates, zeros, points referenced to seas or research institutions). It proceeds by extracting essential columns (coordinates, uncertainties and occurrence status) and cropping the data to northern South America, by using the mean latitude of the condor occurrence data as cut-off line. The uncertainty of the cleaned data was then quantified as follows:
 
 | Uncertainty    | Fraction of the retained data points |
 |----------------|--------------------------------------|
@@ -285,7 +285,7 @@ The data is thinned so that individual data points are spaced by at least 1 km. 
 
 ```
 
-## Chunk 3: Generating Pseudo-absences (Manuel)
+## Chunk 3: Generating Pseudo-absences
 
 **To-do: Change pseudo-absences: Generate the stratified ones using temperature and precipitation**
 
@@ -562,70 +562,39 @@ Finally, three sets of 10 000 geographically weighed pseudo-absences were genera
 ############################################################################################
 ```
 
-## Chunk 4: Predictor Acquisition and Pre-processing (Justine & Tanja)
+## Chunk 4: Predictor Acquisition and Pre-processing
 
-Goal: selecting, cropping, reprojecting, and aligning rasters.
-
-Rasters to consider:
+In this part, we first selected the following predictors:
 
 -   Bioclimatic (obtain from CHELSA <https://chelsa-climate.org/bioclim/>)
 
+    -   mean annual air temperature
+
+    -   Mean diurnal air temperature
+
+    -   annual range of air temperature
+
+    -   annual precipitation amount
+
+    -   precipitation amount of the wettest month
+
+    -   precipitation amount of the driest month
+
 -   Tree cover
 
--   Tree height
+-   Canopy height
 
--   DEM (later calculate aspect and slope in R
+-   DEM (later calculate aspect and slope in R)
 
 -   Population density
 
 -   Distance to water (generated from water bodies (lakes + rivers))
 
--   Landscape openness
-
-Decide on trade-off between grain size and extent: For now we use 1x1 km (original resolution of DEM)
-
-Splitting data into months, fitting months separately (is one habitat more important for nesting?)
-
-Environmental or spatial stratification of pseudo-absences
-
-We start with random pseudo-absences
-
-We choose to use an area-conservative projection: Albers equal area conic projection (epsg.io)
-
-We will crop all layers to the study area (shapefile located in the folder study area shapefile)
-
-We will test for autocorrelations between the predictors (threshold in the lecture at 0.7).
+We then cropped all layer to the study area, reprojected to the DEM raster, and aligned the rasters.
 
 ```{r}
-# Generating slope and aspect from DEM:
-# library(terra)
-# (dem <- rast("Rasters/DEM.tif"))
-# slope <- terrain(x = dem, v = "slope")
-# aspect <- terrain(x = dem, v = "aspect")
-# 
-# writeRaster(slope, "Rasters/slope.tif")
-# writeRaster(aspect, "Rasters/aspect.tif")
+## Read in downloaded rasters
 
-############################################################################################
-#The code above has been run, the files are stored in the repository, please don't run again but access the files directly (Manuel 13/4; 17:47)
-############################################################################################
-
-#insert Rasters
-
-##population density
-pop_dens <- raster("C:/Users/justi/OneDrive/Studium/Umweltnaturwissenschaften/Landscape Modelling/Condor/download polybox/gpw_v4_population_density_rev11_2020_30_sec.tif")
-
-library('Rcpp')
-library('terra')
-library('ggsignif')
-library('raster')
-
-### DEM
-dem <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\DEM_aea.tif')
-plot(dem, axes=F)
-
-
-#### Predictors
 ### Temperature
 ## Mean annual air temperature (bio1)
 #temp_mean <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio1_1981-2010_V.2.1.tif')
@@ -648,6 +617,30 @@ plot(tree_cover, axes=F)
 canopy_height <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\canopy_height_aea.tif')
 plot(canopy_height, axes=F)
 
+## DEM
+dem <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\DEM_aea.tif')
+# Tree cover
+tree_cover <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\tree_cover_2000_aea.tif')
+# Canopy height
+canopy_height <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\canopy_height_aea.tif')
+
+## Population density
+pop_dens <- raster("C:/Users/justi/OneDrive/Studium/Umweltnaturwissenschaften/Landscape Modelling/Condor/download polybox/gpw_v4_population_density_rev11_2020_30_sec.tif")
+
+
+# load needed packages
+library('Rcpp')
+library('terra')
+library('ggsignif')
+library('raster')
+
+# Generating slope and aspect from DEM:
+(dem <- rast("Rasters/DEM.tif"))
+slope <- terrain(x = dem, v = "slope")
+aspect <- terrain(x = dem, v = "aspect")
+
+writeRaster(slope, "Rasters/slope.tif")
+writeRaster(aspect, "Rasters/aspect.tif")
 
 #### Create one predictor layer
 ### Check if the resolution, origin and coordinate reference system match among the different layers with the #*compareGeom* function
@@ -675,38 +668,11 @@ predictors <- c(dem, temp_mean, temp_range, prec_annual, prec_wettest_month, pre
 names(predictors) <- c('dem', 'temp_mean', 'temp_range', 'prec_annual', 'prec_wettest_month', 'prec_driest_month', 'tree_cover', 'canopy_height')
 predictors
 
-
 writeRaster(temp_mean, 'temp_mean.tif')
 writeRaster(temp_range, 'temp_range.tif')
 writeRaster(prec_annual, 'precipitation_annual.tif')
 writeRaster(prec_wettest_month, 'precipitation_wettest_month.tif')
 writeRaster(prec_driest_month, 'precipitatioin_driest_month.tif')
-
-
-
-## Read in rasters
-## Read in projected files
-# Mean annual air temperature (bio1)
-temp_mean <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\temp_mean.tif')
-# Annual range of air temperature (bio7)
-temp_range <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\temp_range.tif')
-# Annual Precipitation amount (bio12)
-prec_annual <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\precipitation_annual.tif')
-# Precipitation amount of the wettest month (bio13)
-prec_wettest_month <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\precipitation_wettest_month.tif')
-# Precipitation amount of the driest month (bio14)
-prec_driest_month <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\precipitatioin_driest_month.tif')
-# DEM
-dem <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\DEM_aea.tif')
-# Tree cover
-tree_cover <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\tree_cover_2000_aea.tif')
-# Canopy height
-canopy_height <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\canopy_height_aea.tif')
-
-# Tree cover
-tree_cover <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\tree_cover_2000_aea.tif')
-# Canopy height
-canopy_height <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\canopy_height_aea.tif')
 
 #convert to Spatraster
 slope <- as(slope, "SpatRaster")
@@ -755,6 +721,8 @@ dem <- as(dem, "SpatRaster")
 ############################################################################################
 ```
 
+In the following part, we tested for autocorrelations between the predictors with the threshold set at 0.7.
+
 Extracting environmental conditions for presences and absences:
 
     df_pres_aa <- cbind(extract(environmental_predictors,crd_aa_thin), crd_aa_thin)
@@ -764,36 +732,8 @@ Code for reprojection:
 dem_reprojected \<- terra::project(x = dem, y = "ESRI:102033", method = "near")
 
 ```{r}
-####
 
-################################
-model_matrix_condor
-model_matrix_puma
-model_matrix_bear
-
-summary(model_matrix_condor)
-summary(model_matrix_puma)
-summary(model_matrix_bear)
-################################
-
-### Creating a model matrix
-# combining observation data of the species with the environmental data at the sampling points
-# Matrix must consist the coordinates of the sampling points, presences and absences, and the local environmental conditions
-
-model_matrix <- condor
-names(model_matrix)[4] <- 'condor'
-model_matrix$puma <- puma$Presence[match(model_matrix$X, puma$X)]
-model_matrix$bear <- bear$Presence[match(model_matrix$X, bear$X)]
-summary(model_matrix)
-
-# Add environmental values and remove NAs
-model_matrix <- cbind(model_matrix, extract(predictors, model_matrix[, c('x', 'y')], ID=F))
-summary(model_matrix)
-model_matrix <- model_matrix[complete.cases(model_matrix),]
-summary(model_matrix)
-
-# Save matrix
-# write.Raster(model_matrix, 'model_matrix.tif')
+################################################################################
 
 # Check number of presences and absences for each species (here only presences)
 table(model_matrix$condor)
@@ -870,8 +810,229 @@ par(xpd = NA)
 #(does not work here but works in my own RStudio)
 #Do for each model_matrix (condor, puma, bear)?
 
+################################################################################
+#NEW PART PREDICTORS
+
+# Load packages
+library(terra)
+library(viridisLite)
+
+# Load environmental predictors
+predictors <- rast("C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\predictors.tif")
+summary(predictors)
+
+# Plot predictors to get an overview
+plot(predictors, col = viridis(1e3), axes = FALSE, main = c('DEM', 'Temperature Mean Annual', 'Temperature Mean Diurnal', 'Temperature Range', 'Precipitation Annual', 'Precipitation Wettest Month', 'Precipitation Driest Month', 'Tree Cover', 'Canopy Height', 'Population Density', 'Aspect', 'Slope', 'Water Bodies'))
 
 
+####Correlations and explanatory power condor
+### Correlation among predictors - Condor
+# Subset the model_matrix for environmental predictors
+vls <- model_matrix_condor[, 5:ncol(model_matrix_condor)]
+
+# Calcualte all pairwise Pearson correlation coefficients
+corma <- as.matrix(cor(vls))
+
+# Prepare the plot
+par(mfrow = c(1,1), oma = c(0,7.5,7,0), mar = c(0,0,0,0), ps = 8, cex = 1, xpd = NA)
+
+plot(1, 1, xlim = c(0, ncol(vls)-.5), ylim = c(0.5, ncol(vls)), 
+     xaxs = "i", yaxs = "i", type = "n", xaxt = "n", yaxt = "n", bty = "n", 
+     ylab = "", xlab = "")
+
+# Loop over the upper left half of the correlation matrix and plot the values
+for(i in 1:(ncol(vls)-1)){
+  
+  if(i<ncol(vls)){
+    text(i-.5, ncol(vls)+.3, colnames(vls)[i], pos=2,offset=0,srt=-90) #x-axis labels
+  }
+  
+  for(j in (i+1):ncol(vls)){
+    # Define color code: green = OK, orange = problematic, red = big problem
+    cl <- ifelse(abs(corma[i,j]) < .7, "green", 
+                 ifelse(abs(corma[i,j]) < .9, "orange", "red"))
+    points(i-.5, j-.5, cex = 5, pch = 16, col = cl)
+    # Add Pearson correlation coefficients
+    text(i-.5, j-.5, round(corma[i,j], digits = 2), cex = .9) 
+    
+    if(i==1){
+      text(i-.5, j-.5, colnames(vls)[j], pos = 2, offset = 2) # y-axis labels
+    }
+  }
+}
+par(xpd = NA)
+
+
+### Explanatory power - Condor
+suppressPackageStartupMessages(library(ecospat))
+
+d2adj <- rep(NA, ncol(model_matrix_condor)-4)
+names(d2adj) <- colnames(model_matrix_condor)[5:ncol(model_matrix_condor)]
+
+for(i in 5:ncol(model_matrix_condor)){
+  glm.bi <- glm(model_matrix_condor$Presence ~ model_matrix_condor[,i] + I(model_matrix_condor[, i]^2), 
+                family = 'binomial')
+  d2adj[i - 4] <- ecospat.adj.D2.glm(glm.bi)* 100
+}
+
+round(sort(d2adj, decreasing = TRUE), digits = 2)
+
+
+#### Correlations and explanatory power puma
+### Correlation among predictors - Puma
+# Subset the model_matrix for environmental predictors
+vls <- model_matrix_puma [, 5:ncol(model_matrix_puma)]
+
+# Calcualte all pairwise Pearson correlation coefficients
+corma <- as.matrix(cor(vls))
+
+# Prepare the plot
+par(mfrow = c(1,1), oma = c(0,7.5,7,0), mar = c(0,0,0,0), ps = 8, cex = 1, xpd = NA)
+
+plot(1, 1, xlim = c(0, ncol(vls)-.5), ylim = c(0.5, ncol(vls)), 
+     xaxs = "i", yaxs = "i", type = "n", xaxt = "n", yaxt = "n", bty = "n", 
+     ylab = "", xlab = "")
+
+# Loop over the upper left half of the correlation matrix and plot the values
+for(i in 1:(ncol(vls)-1)){
+  
+  if(i<ncol(vls)){
+    text(i-.5, ncol(vls)+.3, colnames(vls)[i], pos=2,offset=0,srt=-90) #x-axis labels
+  }
+  
+  for(j in (i+1):ncol(vls)){
+    # Define color code: green = OK, orange = problematic, red = big problem
+    cl <- ifelse(abs(corma[i,j]) < .7, "green", 
+                 ifelse(abs(corma[i,j]) < .9, "orange", "red"))
+    points(i-.5, j-.5, cex = 5, pch = 16, col = cl)
+    # Add Pearson correlation coefficients
+    text(i-.5, j-.5, round(corma[i,j], digits = 2), cex = .9) 
+    
+    if(i==1){
+      text(i-.5, j-.5, colnames(vls)[j], pos = 2, offset = 2) # y-axis labels
+    }
+  }
+}
+par(xpd = NA)
+
+
+### Explanatory power - Puma
+suppressPackageStartupMessages(library(ecospat))
+
+d2adj <- rep(NA, ncol(model_matrix_puma)-4)
+names(d2adj) <- colnames(model_matrix_puma)[5:ncol(model_matrix_puma)]
+
+for(i in 5:ncol(model_matrix_puma)){
+  glm.bi <- glm(model_matrix_puma$Presence ~ model_matrix_puma[,i] + I(model_matrix_puma[, i]^2), 
+                family = 'binomial')
+  d2adj[i - 4] <- ecospat.adj.D2.glm(glm.bi)* 100
+}
+
+round(sort(d2adj, decreasing = TRUE), digits = 2)
+
+
+#### Correlatoins and explanatory power bear
+### Correlations among predictors - Bear
+# Subset the model_matrix for environmental predictors
+vls <- model_matrix_bear[, 5:ncol(model_matrix_bear)]
+
+# Calcualte all pairwise Pearson correlation coefficients
+corma <- as.matrix(cor(vls))
+
+# Prepare the plot
+par(mfrow = c(1,1), oma = c(0,7.5,7,0), mar = c(0,0,0,0), ps = 8, cex = 1, xpd = NA)
+
+plot(1, 1, xlim = c(0, ncol(vls)-.5), ylim = c(0.5, ncol(vls)), 
+     xaxs = "i", yaxs = "i", type = "n", xaxt = "n", yaxt = "n", bty = "n", 
+     ylab = "", xlab = "")
+
+# Loop over the upper left half of the correlation matrix and plot the values
+for(i in 1:(ncol(vls)-1)){
+  
+  if(i<ncol(vls)){
+    text(i-.5, ncol(vls)+.3, colnames(vls)[i], pos=2,offset=0,srt=-90) #x-axis labels
+  }
+  
+  for(j in (i+1):ncol(vls)){
+    # Define color code: green = OK, orange = problematic, red = big problem
+    cl <- ifelse(abs(corma[i,j]) < .7, "green", 
+                 ifelse(abs(corma[i,j]) < .9, "orange", "red"))
+    points(i-.5, j-.5, cex = 5, pch = 16, col = cl)
+    # Add Pearson correlation coefficients
+    text(i-.5, j-.5, round(corma[i,j], digits = 2), cex = .9) 
+    
+    if(i==1){
+      text(i-.5, j-.5, colnames(vls)[j], pos = 2, offset = 2) # y-axis labels
+    }
+  }
+}
+par(xpd = NA)
+
+
+### Explanatory power - Bear
+suppressPackageStartupMessages(library(ecospat))
+
+d2adj <- rep(NA, ncol(model_matrix_bear)-4)
+names(d2adj) <- colnames(model_matrix_bear)[5:ncol(model_matrix_bear)]
+
+for(i in 5:ncol(model_matrix_bear)){
+  glm.bi <- glm(model_matrix_bear$Presence ~ model_matrix_bear[,i] + I(model_matrix_condor[, i]^2), 
+                family = 'binomial')
+  d2adj[i - 4] <- ecospat.adj.D2.glm(glm.bi)* 100
+}
+
+round(sort(d2adj, decreasing = TRUE), digits = 2)
+
+#### Predictor layer condor
+# Due to the results of the correlations and the explanatory power, we remove following predictors:
+# - prec_wettest_month
+# - prec_driest_month
+# - canopy_height
+# - temp_range
+
+## Stacking the layers for the Condor
+predictors_condor <- c(dem, temp_mean_annual, temp_mean_diurnal, prec_annual, tree_cover, pop_dens, aspect, slope, water_bodies)
+names(predictors_condor) <- c('dem', 'temp_mean_annual', 'temp_mean_diurnal', 'prec_annual', 'tree_cover', 'pop_dens', 'aspect', 'slope', 'water_bodies')
+
+predictors_condor
+summary(predictors_condor)
+
+
+#### Predictor layer puma
+# Due to the results of the correlations and the explanatory power, we remove following predictors:
+# - temp_range
+# - prec_driest_month
+# - prec_wettest_month
+# - tree_cover
+
+## Stacking the layers for the Puma
+predictors_puma <- c(dem, temp_mean_annual, temp_mean_diurnal, prec_annual, canopy_height, pop_dens, aspect, slope, water_bodies)
+names(predictors_puma) <- c('dem', 'temp_mean_annual', 'temp_mean_diurnal', 'prec_annual', 'canopy_height', 'pop_dens', 'aspect', 'slope', 'water_bodies')
+
+predictors_puma
+summary(predictors_puma)
+
+
+#### Predictor layer bear
+
+# Due to the results of the correlations and the explanatory power, we remove following predictors:
+# - temp_mean_diurnal
+# - prec_driest_month
+# - prec_wettest_month
+# - tree_cover
+
+## Stacking the layers for the Bear
+predictors_bear <- c(dem, temp_mean_annual, temp_range, prec_annual, canopy_height, pop_dens, aspect, slope, water_bodies)
+names(predictors_bear) <- c('dem', 'temp_mean_annual', 'temp_range', 'prec_annual', 'canopy_height', 'pop_dens', 'aspect', 'slope', 'water_bodies')
+
+predictors_bear
+summary(predictors_bear)
+
+
+# Save the rasters:
+writeRaster(predictors_condor, 'predictors_condor_new.tif')
+writeRaster(predictors_puma, 'predictors_puma_new.tif')
+writeRaster(predictors_bear, 'predictors_bear_new.tif')
 ```
 
 ## Chunk 5: Model Fitting (Manuel)
@@ -1116,17 +1277,25 @@ unique(nrow(models$bear$random$glm$data),
 
 The following chunk does the following:
 
-1.  Model Validation: Because only one data set was available, only the cross validation but not the independent validation was performed.
+1.  Model Validation: Because only one data set was available, only the cross validation but not the independent validation was performed. There following steps were done:
 
-    1.  Create cv predictions
+    1.  Create cross validation predictions
 
     2.  Calculate thresholds and make confusion matrices
 
-    3.  Calculate and plot threshold dependent validation (Cohen's Kappa & TSS)
+    3.  Calculate threshold dependent validation (Cohen's Kappa & TSS). The following plots created:![](images/Kappa "Cohen's Kappa"){width="316"}![](images/TSS "TSS"){width="316"}
 
-    4.  Calculate and plot threshold independent validation (ROC, AUC & Boyce)
+    4.  Calculate threshold independent validation (ROC, AUC & Boyce). The following plots created:
 
-2.  After the validation, the best fitted pseudo-absences (1 set per species) and models (2 per species) were selected.
+        ![](images/ROC "ROC"){width="316"}![](images/AUC "AUC"){width="316"}
+
+        ![](images/Boyce "Boyce"){width="316"}![](images/Boyce%20Index "Boyce Index"){width="316"}
+
+2.  The results of the model validation were used for the spatial projection. For all species, the GBM models were best and RF were second best. For the condor, the random pseudo-absences got the best scores, while the puma & bear had the best results for the environmental stratified pseudo-absences.
+
+3.  Projection:
+
+4.  Ensemble:
 
 ```{r}
 # Load packages
@@ -1278,6 +1447,11 @@ for (i in 1: length(spcs)){
 }
 
 names(cv_thres_list) <- c("condor", "puma", "bear")
+
+cv_thres_unlist_c <- unlist(cv_thres_list$condor, recursive = F)
+
+# store for projections
+save(cv_thres_list, file="C:/Users/justi/OneDrive/Studium/Umweltnaturwissenschaften/Landscape Modelling/Condor/Condor-Landscape-Modelling/cv_thres_list.rda")
 
 # Confusion Matrix
 
