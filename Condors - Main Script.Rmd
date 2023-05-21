@@ -23,27 +23,17 @@ Weekly meetings on Tuesdays at 4:15 PM on the green floor in CHN or in F77 (no m
 
 Summarize and email questions to Monika before the meetings.
 
-+--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
-| Date         | Progress Milestone                                                                         | Suggested Focus                                                      |
-+==============+============================================================================================+======================================================================+
-| 03.04-07.04  | Species occurrence data downloaded and cleaned                                             | Data retrieval and cleaning                                          |
-+--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
-| 10.04-14.05  | Environmental data prepared for model fitting                                              | Environmental exploration                                            |
-+--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
-| 17.04-21.04  | 1.Initial set of predictors selected 2.Created 1st set of PAs (e.g.: random)               | Environmental predictors ; Pseudoabsence creation (PAs)              |
-+--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
-| 24.04-28.04  | Buffered, target-group, environmentally stratified PAs                                     | Pseudoabsence creation (PAs)                                         |
-+--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
-| 01.05-05.05  | Models fitted and evaluated (at least 2 algorithms)                                        | Model fitting & evaluation                                           |
-+--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
-| 08.05-12.05  | Evidence of exploring different model parameters, selected ones with best fit and accuracy | Generated predictor response curves, model fitting & model selection |
-+--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
-| 15.05-19.05  | Creation of ranges (polygons for mammals)                                                  | Alternative approach to SDM                                          |
-+--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
-| 22.05-26.05  | Overlap of distributions and protected areas                                               | Implications for conservation                                        |
-+--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
-| 22.05        | Presentation                                                                               |                                                                      |
-+--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| Date        | Progress Milestone                                                                         | Suggested Focus                                                      |
+|-------------|--------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
+| 03.04-07.04 | Species occurrence data downloaded and cleaned                                             | Data retrieval and cleaning                                          |
+| 10.04-14.05 | Environmental data prepared for model fitting                                              | Environmental exploration                                            |
+| 17.04-21.04 | 1.Initial set of predictors selected 2.Created 1st set of PAs (e.g.: random)               | Environmental predictors ; Pseudoabsence creation (PAs)              |
+| 24.04-28.04 | Buffered, target-group, environmentally stratified PAs                                     | Pseudoabsence creation (PAs)                                         |
+| 01.05-05.05 | Models fitted and evaluated (at least 2 algorithms)                                        | Model fitting & evaluation                                           |
+| 08.05-12.05 | Evidence of exploring different model parameters, selected ones with best fit and accuracy | Generated predictor response curves, model fitting & model selection |
+| 15.05-19.05 | Creation of ranges (polygons for mammals)                                                  | Alternative approach to SDM                                          |
+| 22.05-26.05 | Overlap of distributions and protected areas                                               | Implications for conservation                                        |
+| 22.05       | Presentation                                                                               |                                                                      |
 
 : Preliminary schedule
 
