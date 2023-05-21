@@ -23,27 +23,17 @@ Weekly meetings on Tuesdays at 4:15 PM on the green floor in CHN or in F77 (no m
 
 Summarize and email questions to Monika before the meetings.
 
-+-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 | Date        | Progress Milestone                                                                         | Suggested Focus                                                      |
-+=============+============================================================================================+======================================================================+
+|---------------|---------------------------------|------------------------|
 | 03.04-07.04 | Species occurrence data downloaded and cleaned                                             | Data retrieval and cleaning                                          |
-+-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 | 10.04-14.05 | Environmental data prepared for model fitting                                              | Environmental exploration                                            |
-+-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 | 17.04-21.04 | 1.Initial set of predictors selected 2.Created 1st set of PAs (e.g.: random)               | Environmental predictors ; Pseudoabsence creation (PAs)              |
-+-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 | 24.04-28.04 | Buffered, target-group, environmentally stratified PAs                                     | Pseudoabsence creation (PAs)                                         |
-+-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 | 01.05-05.05 | Models fitted and evaluated (at least 2 algorithms)                                        | Model fitting & evaluation                                           |
-+-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 | 08.05-12.05 | Evidence of exploring different model parameters, selected ones with best fit and accuracy | Generated predictor response curves, model fitting & model selection |
-+-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 | 15.05-19.05 | Creation of ranges (polygons for mammals)                                                  | Alternative approach to SDM                                          |
-+-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 | 22.05-26.05 | Overlap of distributions and protected areas                                               | Implications for conservation                                        |
-+-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 | 29.05       | Presentation                                                                               |                                                                      |
-+-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 
 : Preliminary schedule
 
@@ -63,7 +53,7 @@ Some information about habitat and diet of the 3 focal species
 
 -   <https://avianreport.com/andean-condor-range-and-habitat/>
 
--   [https://nationalzoo.si.edu/animals/andean-bear\#:\~:text=Andean%20bears%20live%20in%20a](https://nationalzoo.si.edu/animals/andean-bear#:~:text=Andean%20bears%20live%20in%20a,forest%20to%20thorny%20dry%20forest.){.uri}
+-   [https://nationalzoo.si.edu/animals/andean-bear#:\~:text=Andean%20bears%20live%20in%20a](https://nationalzoo.si.edu/animals/andean-bear#:~:text=Andean%20bears%20live%20in%20a,forest%20to%20thorny%20dry%20forest.){.uri}
 
 -   [forest%20to%20thorny%20dry%20forest.](https://nationalzoo.si.edu/animals/andean-bear#:~:text=Andean%20bears%20live%20in%20a,forest%20to%20thorny%20dry%20forest.){.uri} <https://animalia.bio/south-american-cougar>
 
@@ -1212,7 +1202,7 @@ The following chunk does the following:
 
 3.  Projection:
 
-4.  Ensemble:
+4.  Ensemble: We created ensembles by using max kappa as binarization threshold and committee vote to combine the two models that we selected for each species.
 
 ```{r}
 # Load packages
@@ -1591,6 +1581,74 @@ barplot(matrix(boyce_stats$cv_bear, nrow = 3), beside = TRUE, ylim = c(0,1.3), y
 axis(2, at = -2:5/5)
 legend("topright",legend = lgna,
        fill = cls, bty = "n")
+```
+
+```{r}
+### Ensemble
+
+cv_thres_list # we choose maxkappa as threshold
+kappa <- data.frame(condor = c(cv_thres_list$condor$random.rf[4], cv_thres_list$condor$random.gbm[4]),
+                    puma = c(cv_thres_list$puma$strat.rf[4], cv_thres_list$puma$strat.gbm[4]),
+                    bear = c(cv_thres_list$bear$strat.rf[4], cv_thres_list$bear$strat.gbm[4]))
+
+
+
+setwd("C:/Users/mwebe/Downloads")
+library(terra)
+library(sf)
+area <- read_sf("shapefiles/study area shapefile.shp")[1]
+
+### Condor
+condor <- rast("Condor random gbm and random rf.tif")
+
+condor <- mask(crop(condor, area), area)
+names(condor) <- c("gbm", "rf")
+
+
+condor$rf[condor$rf > kappa[1,1]] <- 1
+condor$rf[condor$rf != 1] <- 0
+
+condor$gbm[condor$gbm > kappa[2,1]] <- 1
+condor$gbm[condor$gbm != 1] <- 0
+
+condor_final <- condor$rf + condor$gbm
+plot(condor_final)
+writeRaster(condor_final, "condor.tif")
+
+### Puma
+puma <- rast("Puma strat gbm and strat rf.tif")
+
+puma <- mask(crop(puma, area), area)
+names(puma) <- c("gbm", "rf")
+
+
+puma$rf[puma$rf > kappa[1,2]] <- 1
+puma$rf[puma$rf != 1] <- 0
+
+puma$gbm[puma$gbm > kappa[2,2]] <- 1
+puma$gbm[puma$gbm != 1] <- 0
+
+puma_final <- puma$rf + puma$gbm
+plot(puma_final)
+writeRaster(puma_final, "puma.tif")
+
+### Bear
+bear <- rast("Bear strat gbm and strat rf.tif")
+
+bear <- mask(crop(bear, area), area)
+names(bear) <- c("gbm", "rf")
+
+
+bear$rf[bear$rf > kappa[1,3]] <- 1
+bear$rf[bear$rf != 1] <- 0
+
+bear$gbm[bear$gbm > kappa[2,3]] <- 1
+bear$gbm[bear$gbm != 1] <- 0
+
+bear_final <- bear$rf + bear$gbm
+plot(bear_final)
+writeRaster(bear_final, "bear.tif")
+
 ```
 
 ## Chunk 7: Polygon-based alternative approach (Manuel)
