@@ -23,17 +23,27 @@ Weekly meetings on Tuesdays at 4:15 PM on the green floor in CHN or in F77 (no m
 
 Summarize and email questions to Monika before the meetings.
 
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 | Date        | Progress Milestone                                                                         | Suggested Focus                                                      |
-|-------------|--------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
++=============+============================================================================================+======================================================================+
 | 03.04-07.04 | Species occurrence data downloaded and cleaned                                             | Data retrieval and cleaning                                          |
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 | 10.04-14.05 | Environmental data prepared for model fitting                                              | Environmental exploration                                            |
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 | 17.04-21.04 | 1.Initial set of predictors selected 2.Created 1st set of PAs (e.g.: random)               | Environmental predictors ; Pseudoabsence creation (PAs)              |
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 | 24.04-28.04 | Buffered, target-group, environmentally stratified PAs                                     | Pseudoabsence creation (PAs)                                         |
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 | 01.05-05.05 | Models fitted and evaluated (at least 2 algorithms)                                        | Model fitting & evaluation                                           |
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 | 08.05-12.05 | Evidence of exploring different model parameters, selected ones with best fit and accuracy | Generated predictor response curves, model fitting & model selection |
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 | 15.05-19.05 | Creation of ranges (polygons for mammals)                                                  | Alternative approach to SDM                                          |
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 | 22.05-26.05 | Overlap of distributions and protected areas                                               | Implications for conservation                                        |
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 | 22.05       | Presentation                                                                               |                                                                      |
++-------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 
 : Preliminary schedule
 
@@ -956,7 +966,17 @@ The following chunk does the following:
 
 -   Pseudo-absences that fall within cells that contain presences are discarded.
 
--   The models are optimized by excluding predictors with less explanatory power (step-wise AIC optimization).
+The models are optimized by excluding predictors with less explanatory power (step-wise AIC optimization).
+
+-   Visualizing the GLM with response curves:
+
+Condor Puma
+
+![](Visualizations/Response%20Curves%20GLM_Condor.png "Response curve"){width="305"}![](Visualizations/Response%20Curves%20GLM_Puma.png "Response curve Puma"){width="340"}
+
+Bear
+
+![](Visualizations/Response%20Curves%20GLM_Bear.png "Response curve bear"){width="340"}
 
 GBM: Gradient boosting machine is an ensemble algorithm that fits boosted decision trees by minimizing an error gradient.
 
