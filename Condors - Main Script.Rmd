@@ -23,27 +23,17 @@ Weekly meetings on Tuesdays at 4:15 PM on the green floor in CHN or in F77 (no m
 
 Summarize and email questions to Monika before the meetings.
 
-+--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
-| Date         | Progress Milestone                                                                         | Suggested Focus                                                      |
-+==============+============================================================================================+======================================================================+
-| 03.04-07.04  | Species occurrence data downloaded and cleaned                                             | Data retrieval and cleaning                                          |
-+--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
-| 10.04-14.05  | Environmental data prepared for model fitting                                              | Environmental exploration                                            |
-+--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
-| 17.04-21.04  | 1.Initial set of predictors selected 2.Created 1st set of PAs (e.g.: random)               | Environmental predictors ; Pseudoabsence creation (PAs)              |
-+--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
-| 24.04-28.04  | Buffered, target-group, environmentally stratified PAs                                     | Pseudoabsence creation (PAs)                                         |
-+--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
-| 01.05-05.05  | Models fitted and evaluated (at least 2 algorithms)                                        | Model fitting & evaluation                                           |
-+--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
-| 08.05-12.05  | Evidence of exploring different model parameters, selected ones with best fit and accuracy | Generated predictor response curves, model fitting & model selection |
-+--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
-| 15.05-19.05  | Creation of ranges (polygons for mammals)                                                  | Alternative approach to SDM                                          |
-+--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
-| 22.05-26.05  | Overlap of distributions and protected areas                                               | Implications for conservation                                        |
-+--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
-| 29.05        | Presentation                                                                               |                                                                      |
-+--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| Date        | Progress Milestone                                                                         | Suggested Focus                                                      |
+|---------------|---------------------------------|------------------------|
+| 03.04-07.04 | Species occurrence data downloaded and cleaned                                             | Data retrieval and cleaning                                          |
+| 10.04-14.05 | Environmental data prepared for model fitting                                              | Environmental exploration                                            |
+| 17.04-21.04 | 1.Initial set of predictors selected 2.Created 1st set of PAs (e.g.: random)               | Environmental predictors ; Pseudoabsence creation (PAs)              |
+| 24.04-28.04 | Buffered, target-group, environmentally stratified PAs                                     | Pseudoabsence creation (PAs)                                         |
+| 01.05-05.05 | Models fitted and evaluated (at least 2 algorithms)                                        | Model fitting & evaluation                                           |
+| 08.05-12.05 | Evidence of exploring different model parameters, selected ones with best fit and accuracy | Generated predictor response curves, model fitting & model selection |
+| 15.05-19.05 | Creation of ranges (polygons for mammals)                                                  | Alternative approach to SDM                                          |
+| 22.05-26.05 | Overlap of distributions and protected areas                                               | Implications for conservation                                        |
+| 22.05       | Presentation                                                                               |                                                                      |
 
 : Preliminary schedule
 
@@ -63,7 +53,7 @@ Some information about habitat and diet of the 3 focal species
 
 -   <https://avianreport.com/andean-condor-range-and-habitat/>
 
--   [https://nationalzoo.si.edu/animals/andean-bear\#:\~:text=Andean%20bears%20live%20in%20a](https://nationalzoo.si.edu/animals/andean-bear#:~:text=Andean%20bears%20live%20in%20a,forest%20to%20thorny%20dry%20forest.){.uri}
+-   [https://nationalzoo.si.edu/animals/andean-bear#:\~:text=Andean%20bears%20live%20in%20a](https://nationalzoo.si.edu/animals/andean-bear#:~:text=Andean%20bears%20live%20in%20a,forest%20to%20thorny%20dry%20forest.){.uri}
 
 -   [forest%20to%20thorny%20dry%20forest.](https://nationalzoo.si.edu/animals/andean-bear#:~:text=Andean%20bears%20live%20in%20a,forest%20to%20thorny%20dry%20forest.){.uri} <https://animalia.bio/south-american-cougar>
 
@@ -954,7 +944,7 @@ writeRaster(predictors_puma, 'predictors_puma_new.tif')
 writeRaster(predictors_bear, 'predictors_bear_new.tif')
 ```
 
-## Chunk 5: Model Fitting (Manuel)
+## Chunk 5: Model Fitting
 
 The following chunk does the following:
 
@@ -1190,7 +1180,7 @@ unique(nrow(models$bear$random$glm$data),
        nrow(models$bear$geo$gbm$data))
 ```
 
-## Chunk 6: Model Evaluation, Projection and Ensemble (Justine & Tanja)
+## Chunk 6: Model Evaluation, Projection and Ensemble
 
 The following chunk does the following:
 
@@ -1659,7 +1649,7 @@ writeRaster(bear_final, "bear.tif")
 
 ```
 
-## Chunk 7: Polygon-based alternative approach (Manuel)
+## Chunk 7: Polygon-based alternative approach
 
 The following scripts have been adapted from Lyu, L. *et al.* (2022) 'An integrated high-resolution mapping shows congruent biodiversity patterns of Fagales and Pinales', *The New Phytologist*, 235(2), pp. 759--772. Available at: <https://doi.org/10.1111/nph.18158>.
 
@@ -1671,7 +1661,7 @@ The third chunk runs the approach for the 16 large mammal species occurring in C
 
 In the last chunk, all rasters are reprojected to ESRI:102033 and cropped to the study area.
 
-The following three basic visualizations are stored in the same folder and display the occurrence data (in red) over the generated range (in green): **(Do not use them for the presentation, I will produce better one's in QGIS)**
+The following three basic visualizations are stored in the same folder and display the occurrence data (in red) over the generated range (in green):
 
 ![Polygon-based approach output: Condor](Polygon-based%20approach/plot_range/condor_epsg4326_polygon.png)
 
@@ -2397,7 +2387,7 @@ The following three basic visualizations are stored in the same folder and displ
 
 ```
 
-## Chunk 8: Down-scaling to Colombia; Comparison with PA-network (Manuel)
+## Chunk 8: Down-scaling to Colombia; Comparison with PA-network
 
 The following chunk acquires a shapefile for Colombia, projects it to ESRI:102033 and crops rasters to it. The GIS processing has been outsourced to QGIS 3.
 
@@ -2423,10 +2413,6 @@ writeOGR(colombia_albers, "Study area shapefile/", layer = "Colombia_ESRI_102033
 cropped_raster <- crop(raster, colombia_albers)
 cropped_raster <- mask(cropped_raster, colombia_albers)
 
-## Reading in PA network ### Possibly too large, I outsource to QGIS here
-setwd("C:/0_Documents/10_ETH/12_Mon 13-16_CHN E42_Landscape Modelling of Biodiversity/Project/QGIS/Protected_areas_poly")
-PAs <- readOGR()
+#### From here, the work has been transferred to QGIS
 
 ```
-
-![](Species%20Richness%20and%20PAs%20Colombia.jpeg)
