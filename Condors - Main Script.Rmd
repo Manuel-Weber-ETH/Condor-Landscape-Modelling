@@ -968,7 +968,7 @@ The following chunk does the following:
 
 The models are optimized by excluding predictors with less explanatory power (step-wise AIC optimization).
 
--   Visualizing the GLM with response curves:
+-   Visualizing the models with response curves. The following curves show the responses of the GLM models:
 
 Condor Puma
 
@@ -1407,7 +1407,7 @@ The following chunk does the following:
 
 2.  The results of the model validation were used for the spatial projection. For all species, the GBM models were best and RF were second best. For the condor, the random pseudo-absences got the best scores, while the puma & bear had the best results for the environmental stratified pseudo-absences.
 
-3.  Projection:
+3.  Projection: We made spatial predictions for GBM and RF models for all three species. For the condor we used the random and for the puma and the bear the stratified pseudo absences.
 
 4.  Ensemble: We created ensembles by using max kappa as binarization threshold and committee vote to combine the two models that we selected for each species.
 
@@ -1788,6 +1788,168 @@ barplot(matrix(boyce_stats$cv_bear, nrow = 3), beside = TRUE, ylim = c(0,1.3), y
 axis(2, at = -2:5/5)
 legend("topright",legend = lgna,
        fill = cls, bty = "n")
+```
+
+```{r}
+##### Making spatial projections
+
+##### Condor
+### Load predictors for condor
+predictors_condor <- rast("C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\predictors_condor_new.tif")
+
+### Load fitted models
+# Load all fitted models
+fitted_model <- readRDS("C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\fitted_models.rds")
+summary(fitted_models)
+# Load fitted models for condor
+condor_fit_models <- unlist(fitted_model$condor, recursive = FALSE)
+summary(condor_fit_models)
+# Load random gbm and random rf models for condor
+condor_fit_mods <- list(condor_fit_models$random.gbm, condor_fit_models$random.rf)
+summary(condor_fit_mods)
+
+### Make habitat suitability projections for all the pixels in South America
+# Predict helper function for rf predictions
+prd.help = function(model, data){
+  pr = predict(model, data)
+  return(pr$predictions[,2])  
+}
+
+# Loop and predict for the different combinations between SDM algorithm and Species
+pr_cur_prob <- lapply(condor_fit_mods, function(x,y){
+  if("gbm" %in% class(x)){
+    predict(y, x, type = "response") # Note that that the predict function here
+    # is from terra & made to predict to SpatRasters.
+    # So it is set up a bit differently.
+  } else {
+    predict(y, x, fun = prd.help, na.rm = T)
+  }
+}, y = predictors_condor)
+
+# Combine to multilayer SpatRaster
+stk_cur_prob <- rast(pr_cur_prob)
+
+writeRaster(stk_cur_prob, 'Condor random gbm and random rf.tif')
+
+# Define colors
+cls <- colorRampPalette(brewer.pal(9, "Blues"))(50)
+
+# Define plot titles
+ttl <- c('Condor random gbm',
+         'Condor random rf')
+
+# Plot
+par(mfrow = c(2,2), cex = 1)
+plot(stk_cur_prob, bty = "n",axes = F, range = c(0,1), col = cls, cex = 1,
+     mar = c(1,0,2,4),
+     main = ttl,
+     plg = list(title = "Suitability"))
+
+
+##### Puma
+### Load predictors for puma
+predictors_puma <- rast("C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\predictors_puma_new.tif")
+
+### Load fitted models
+# Load all fitted models
+fitted_models <- readRDS("C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\fitted_models.rds")
+summary(fitted_models)
+# Load fitted models for puma
+puma_fit_models <- unlist(fitted_model$puma, recursive = FALSE)
+summary(puma_fit_models)
+# Load strat gbm and strat rf models for puma
+puma_fit_mods <- list(puma_fit_models$strat.gbm, puma_fit_models$strat.rf)
+summary(puma_fit_mods)
+
+### Make habitat suitability projections for all the pixels in South America
+# Predict helper function for rf predictions
+prd.help = function(model, data){
+  pr = predict(model, data)
+  return(pr$predictions[,2])  
+}
+
+# Loop and predict for the different combinations between SDM algorithm and Species
+pr_cur_prob <- lapply(puma_fit_mods, function(x,y){
+  if("gbm" %in% class(x)){
+    predict(y, x, type = "response") # Note that that the predict function here
+    # is from terra & made to predict to SpatRasters.
+    # So it is set up a bit differently.
+  } else {
+    predict(y, x, fun = prd.help, na.rm = T)
+  }
+}, y = predictors_puma)
+
+# Combine to multilayer SpatRaster
+stk_cur_prob <- rast(pr_cur_prob)
+
+writeRaster(stk_cur_prob, 'Puma strat gbm and strat rf.tif')
+
+# Define colors
+cls <- colorRampPalette(brewer.pal(9, "Blues"))(50)
+
+# Define plot titles
+ttl <- c('Puma strat gbm',
+         'Puma strat rf')
+
+# Plot
+par(mfrow = c(2,2), cex = 1)
+plot(stk_cur_prob, bty = "n",axes = F, range = c(0,1), col = cls, cex = 1,
+     mar = c(1,0,2,4),
+     main = ttl,
+     plg = list(title = "Suitability"))
+
+
+##### Bear
+### Load predictors for bear
+predictors_bear <- rast("C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\predictors_bear_new.tif")
+
+### Load fitted models
+# Load all fitted models
+fitted_models <- readRDS("C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\fitted_models.rds")
+summary(fitted_models)
+# Load fitted models for bear
+bear_fit_models <- unlist(fitted_model$bear, recursive = FALSE)
+summary(bear_fit_models)
+# Load strat gbm and strat rf models for bear
+bear_fit_mods <- list(bear_fit_models$strat.gbm, bear_fit_models$strat.rf)
+summary(bear_fit_mods)
+
+### Make habitat suitability projections for all the pixels in South America
+# Predict helper function for rf predictions
+prd.help = function(model, data){
+  pr = predict(model, data)
+  return(pr$predictions[,2])  
+}
+
+# Loop and predict for the different combinations between SDM algorithm and Species
+pr_cur_prob <- lapply(bear_fit_mods, function(x,y){
+  if("gbm" %in% class(x)){
+    predict(y, x, type = "response") # Note that that the predict function here
+    # is from terra & made to predict to SpatRasters.
+    # So it is set up a bit differently.
+  } else {
+    predict(y, x, fun = prd.help, na.rm = T)
+  }
+}, y = predictors_bear)
+
+# Combine to multilayer SpatRaster
+stk_cur_prob <- rast(pr_cur_prob)
+
+writeRaster(stk_cur_prob, 'Bear strat gbm and strat rf.tif')
+
+# Define colors
+cls <- colorRampPalette(brewer.pal(9, "Blues"))(50)
+
+# Define plot titles
+ttl <- c('Bear strat gbm',
+         'Bear strat rf')
+
+# Plot
+par(mfrow = c(2,2), cex = 1)
+plot(stk_cur_prob, bty = "n",axes = F, range = c(0,1), col = cls, cex = 1,
+     mar = c(1,0,2,4),
+     main = ttl,
+     plg = list(title = "Suitability"))
 ```
 
 ```{r}
