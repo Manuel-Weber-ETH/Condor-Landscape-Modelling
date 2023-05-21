@@ -23,17 +23,27 @@ Weekly meetings on Tuesdays at 4:15 PM on the green floor in CHN or in F77 (no m
 
 Summarize and email questions to Monika before the meetings.
 
-| Date        | Progress Milestone                                                                         | Suggested Focus                                                      |
-|---------------|---------------------------------|------------------------|
-| 03.04-07.04 | Species occurrence data downloaded and cleaned                                             | Data retrieval and cleaning                                          |
-| 10.04-14.05 | Environmental data prepared for model fitting                                              | Environmental exploration                                            |
-| 17.04-21.04 | 1.Initial set of predictors selected 2.Created 1st set of PAs (e.g.: random)               | Environmental predictors ; Pseudoabsence creation (PAs)              |
-| 24.04-28.04 | Buffered, target-group, environmentally stratified PAs                                     | Pseudoabsence creation (PAs)                                         |
-| 01.05-05.05 | Models fitted and evaluated (at least 2 algorithms)                                        | Model fitting & evaluation                                           |
-| 08.05-12.05 | Evidence of exploring different model parameters, selected ones with best fit and accuracy | Generated predictor response curves, model fitting & model selection |
-| 15.05-19.05 | Creation of ranges (polygons for mammals)                                                  | Alternative approach to SDM                                          |
-| 22.05-26.05 | Overlap of distributions and protected areas                                               | Implications for conservation                                        |
-| 29.05       | Presentation                                                                               |                                                                      |
++--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| Date         | Progress Milestone                                                                         | Suggested Focus                                                      |
++==============+============================================================================================+======================================================================+
+| 03.04-07.04  | Species occurrence data downloaded and cleaned                                             | Data retrieval and cleaning                                          |
++--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| 10.04-14.05  | Environmental data prepared for model fitting                                              | Environmental exploration                                            |
++--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| 17.04-21.04  | 1.Initial set of predictors selected 2.Created 1st set of PAs (e.g.: random)               | Environmental predictors ; Pseudoabsence creation (PAs)              |
++--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| 24.04-28.04  | Buffered, target-group, environmentally stratified PAs                                     | Pseudoabsence creation (PAs)                                         |
++--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| 01.05-05.05  | Models fitted and evaluated (at least 2 algorithms)                                        | Model fitting & evaluation                                           |
++--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| 08.05-12.05  | Evidence of exploring different model parameters, selected ones with best fit and accuracy | Generated predictor response curves, model fitting & model selection |
++--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| 15.05-19.05  | Creation of ranges (polygons for mammals)                                                  | Alternative approach to SDM                                          |
++--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| 22.05-26.05  | Overlap of distributions and protected areas                                               | Implications for conservation                                        |
++--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| 29.05        | Presentation                                                                               |                                                                      |
++--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 
 : Preliminary schedule
 
@@ -53,7 +63,7 @@ Some information about habitat and diet of the 3 focal species
 
 -   <https://avianreport.com/andean-condor-range-and-habitat/>
 
--   [https://nationalzoo.si.edu/animals/andean-bear#:\~:text=Andean%20bears%20live%20in%20a](https://nationalzoo.si.edu/animals/andean-bear#:~:text=Andean%20bears%20live%20in%20a,forest%20to%20thorny%20dry%20forest.){.uri}
+-   [https://nationalzoo.si.edu/animals/andean-bear\#:\~:text=Andean%20bears%20live%20in%20a](https://nationalzoo.si.edu/animals/andean-bear#:~:text=Andean%20bears%20live%20in%20a,forest%20to%20thorny%20dry%20forest.){.uri}
 
 -   [forest%20to%20thorny%20dry%20forest.](https://nationalzoo.si.edu/animals/andean-bear#:~:text=Andean%20bears%20live%20in%20a,forest%20to%20thorny%20dry%20forest.){.uri} <https://animalia.bio/south-american-cougar>
 
@@ -75,7 +85,7 @@ This chunk acquires occurrence data of the Andean Condor, the Puma and the Andea
 #                      hasGeospatialIssue = FALSE, # No geospatial issues 
 #                      limit = 100000) # Maxiumum number of records
 # 
-# write.csv(gbi_vg$data, "gbi_vg.csv")
+# write.csv(gbi_vg$data, "Occurence data/gbi_vg.csv")
 # 
 # ## Puma concolor
 # gbi_pc <- occ_search(scientificName = "Puma concolor", 
@@ -85,7 +95,7 @@ This chunk acquires occurrence data of the Andean Condor, the Puma and the Andea
 #                      hasGeospatialIssue = FALSE, # No geospatial issues 
 #                      limit = 100000) # Maxiumum number of records
 # 
-# write.csv(gbi_pc$data, "gbi_pc.csv")
+# write.csv(gbi_pc$data, "Occurence data/gbi_pc.csv")
 # 
 # ## Tremarctos ornatus
 # gbi_to <- occ_search(scientificName = "Tremarctos ornatus", 
@@ -95,7 +105,7 @@ This chunk acquires occurrence data of the Andean Condor, the Puma and the Andea
 #                      hasGeospatialIssue = FALSE, # No geospatial issues 
 #                      limit = 100000) # Maxiumum number of records
 # 
-# write.csv(gbi_to$data, "gbi_to.csv")
+# write.csv(gbi_to$data, "Occurence data/gbi_to.csv")
 
 ############################################################################################
 #The code above has been run, the files are stored in the repository, please don't run again but access the files directly (Manuel 6/4; 13:22)
@@ -618,7 +628,7 @@ We then cropped all layers to the study area, reprojected them to the DEM raster
 # water_focal<-focal(water, w=matrix(1, nc=3, nr=3)) 
 # plot(water_focal)
 # 
-# 
+# Because of the size of the raster, it is stored locally and uploaded in a shared google drive.
 # writeRaster(water_focal, "C:/Users/justi/OneDrive/Studium/Umweltnaturwissenschaften/Landscape Modelling/Condor/Raster drive/water_focal.tif", overwrite=TRUE)
 
 
@@ -681,7 +691,7 @@ We then cropped all layers to the study area, reprojected them to the DEM raster
 # predictors
 
 
-# ## Save reprojected rasters
+# ## Save reprojected rasters locally because of the size
 # writeRaster(predictors, 'predictors.tif')
 # writeRaster(temp_mean_annual, 'temp_mean_annual.tif')
 # writeRaster(temp_mean_diurnal, 'temp_mean_diurnal.tif', )
@@ -938,7 +948,7 @@ predictors_bear
 summary(predictors_bear)
 
 
-# Save the rasters:
+# Save the rasters locally:
 writeRaster(predictors_condor, 'predictors_condor_new.tif')
 writeRaster(predictors_puma, 'predictors_puma_new.tif')
 writeRaster(predictors_bear, 'predictors_bear_new.tif')
@@ -1590,8 +1600,6 @@ cv_thres_list # we choose maxkappa as threshold
 kappa <- data.frame(condor = c(cv_thres_list$condor$random.rf[4], cv_thres_list$condor$random.gbm[4]),
                     puma = c(cv_thres_list$puma$strat.rf[4], cv_thres_list$puma$strat.gbm[4]),
                     bear = c(cv_thres_list$bear$strat.rf[4], cv_thres_list$bear$strat.gbm[4]))
-
-
 
 setwd("C:/Users/mwebe/Downloads")
 library(terra)
