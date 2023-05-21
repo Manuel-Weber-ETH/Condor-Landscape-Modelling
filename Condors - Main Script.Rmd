@@ -1,6 +1,6 @@
 ---
 title: "Landscape Modelling Project - Condors - Main Script"
-author: "Justine DeGroote, Tanja Falasca, Manuel Weber"
+author: "Justine De Groote, Tanja Falasca, Manuel Weber"
 date: '2023-03-31'
 output: html_document
 ---
@@ -23,17 +23,27 @@ Weekly meetings on Tuesdays at 4:15 PM on the green floor in CHN or in F77 (no m
 
 Summarize and email questions to Monika before the meetings.
 
-| Date        | Progress Milestone                                                                         | Suggested Focus                                                      |
-|---------------|---------------------------------|------------------------|
-| 03.04-07.04 | Species occurrence data downloaded and cleaned                                             | Data retrieval and cleaning                                          |
-| 10.04-14.05 | Environmental data prepared for model fitting                                              | Environmental exploration                                            |
-| 17.04-21.04 | 1.Initial set of predictors selected 2.Created 1st set of PAs (e.g.: random)               | Environmental predictors ; Pseudoabsence creation (PAs)              |
-| 24.04-28.04 | Buffered, target-group, environmentally stratified PAs                                     | Pseudoabsence creation (PAs)                                         |
-| 01.05-05.05 | Models fitted and evaluated (at least 2 algorithms)                                        | Model fitting & evaluation                                           |
-| 08.05-12.05 | Evidence of exploring different model parameters, selected ones with best fit and accuracy | Generated predictor response curves, model fitting & model selection |
-| 15.05-19.05 | Creation of ranges (polygons for mammals)                                                  | Alternative approach to SDM                                          |
-| 22.05-26.05 | Overlap of distributions and protected areas                                               | Implications for conservation                                        |
-| 22.05       | Presentation                                                                               |                                                                      |
++--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| Date         | Progress Milestone                                                                         | Suggested Focus                                                      |
++==============+============================================================================================+======================================================================+
+| 03.04-07.04  | Species occurrence data downloaded and cleaned                                             | Data retrieval and cleaning                                          |
++--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| 10.04-14.05  | Environmental data prepared for model fitting                                              | Environmental exploration                                            |
++--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| 17.04-21.04  | 1.Initial set of predictors selected 2.Created 1st set of PAs (e.g.: random)               | Environmental predictors ; Pseudoabsence creation (PAs)              |
++--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| 24.04-28.04  | Buffered, target-group, environmentally stratified PAs                                     | Pseudoabsence creation (PAs)                                         |
++--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| 01.05-05.05  | Models fitted and evaluated (at least 2 algorithms)                                        | Model fitting & evaluation                                           |
++--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| 08.05-12.05  | Evidence of exploring different model parameters, selected ones with best fit and accuracy | Generated predictor response curves, model fitting & model selection |
++--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| 15.05-19.05  | Creation of ranges (polygons for mammals)                                                  | Alternative approach to SDM                                          |
++--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| 22.05-26.05  | Overlap of distributions and protected areas                                               | Implications for conservation                                        |
++--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
+| 22.05        | Presentation                                                                               |                                                                      |
++--------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
 
 : Preliminary schedule
 
@@ -53,7 +63,7 @@ Some information about habitat and diet of the 3 focal species
 
 -   <https://avianreport.com/andean-condor-range-and-habitat/>
 
--   [https://nationalzoo.si.edu/animals/andean-bear#:\~:text=Andean%20bears%20live%20in%20a](https://nationalzoo.si.edu/animals/andean-bear#:~:text=Andean%20bears%20live%20in%20a,forest%20to%20thorny%20dry%20forest.){.uri}
+-   [https://nationalzoo.si.edu/animals/andean-bear\#:\~:text=Andean%20bears%20live%20in%20a](https://nationalzoo.si.edu/animals/andean-bear#:~:text=Andean%20bears%20live%20in%20a,forest%20to%20thorny%20dry%20forest.){.uri}
 
 -   [forest%20to%20thorny%20dry%20forest.](https://nationalzoo.si.edu/animals/andean-bear#:~:text=Andean%20bears%20live%20in%20a,forest%20to%20thorny%20dry%20forest.){.uri} <https://animalia.bio/south-american-cougar>
 
@@ -574,15 +584,19 @@ In this part, we first selected the following predictors:
 
 -   Canopy height
 
--   DEM (later calculate aspect and slope in R)
+-   DEM
+
+-   Aspect
+
+-   Slope
 
 -   Population density
 
--   Distance to water (generated from water bodies (lakes + rivers))
+-   Water Bodies
 
 We then cropped all layers to the study area, reprojected them to the DEM raster, and aligned the rasters.
 
-![](images/Predictors.jpg "Predictors")
+![](Visualizations/Predictors.jpg "Predictors")
 
 ```{r}
 # # water bodies
@@ -704,23 +718,23 @@ In the following part, we tested for autocorrelations between the predictors wit
 
 1.  Correlation among predictors: we calculated all pairwise Pearson correlation coefficients in the predictor set. The follow plots visualize the correlation with first Condor, then Puma and then Bear.
 
-    ![Predictors Condor](images/Predictors%20Condor.jpg "Predictors Condor"){width="316"}![Predictors Puma](images/Predictors%20Puma.jpg "Predictors Puma"){width="316"}
+    ![Predictors Condor](Visualizations/Predictors%20Condor.jpg "Predictors Condor"){width="316"}![Predictors Puma](Visualizations/Predictors%20Puma.jpg "Predictors Puma"){width="316"}
 
-    ![Predictors Bear](images/Predictors%20Bear.jpg "Predictors Bear"){width="316"}
+    ![Predictors Bear](Visualizations/Predictors%20Bear.jpg "Predictors Bear"){width="316"}
 
 2.  The explanatory power of the predictors was calculated to decide which variables to use for each species.
 
     Condor:
 
-    ![](images/Exp_power%20Condor.jpg "Exp_power Condor")
+    ![](Visualizations/Exp_power%20Condor.jpg "Exp_power Condor")
 
     Puma:
 
-    ![](images/Exp_power%20Puma.jpg)
+    ![](Visualizations/Exp_power%20Puma.jpg)
 
     Bear:
 
-    ![](images/Exp_power%20Bear.jpg)
+    ![](Visualizations/Exp_power%20Bear.jpg)
 
 Considering the output of the previous steps, we decided to use the following predictors:
 
@@ -1136,11 +1150,194 @@ The models are stored in a list in the repository ("fitted_models.rds").
 #     nrow(modli$bear$strat$glm$data))
 # 
 # 
-# saveRDS(modli, file = "fitted_models.rds")
+# saveRDS(modli, file = "~Rasters/fitted_models.rds")
 #
 ############################################################################################
 #The code above has been run, the files are stored in the repository, please don't run again but access the files directly (Manuel 16/05; 17:50)
 ############################################################################################
+
+# Load fitted models
+fitted_model <- readRDS("C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\fitted_models.rds")
+summary(fitted_models)
+
+# Load predictors
+library('terra')
+predictors <- rast("C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\predictors.tif")
+env_predictors <- values(predictors)
+
+
+### CONDOR
+# Extract minima, maxima, and medians
+env_stats <- apply(env_predictors, 2, quantile, probs = c(0,.5,1), na.rm = TRUE) 
+round(env_stats, digits = 2)
+
+# First, you identify the predictors in the step GLM
+vls <- model_matrix_condor[, 5:ncol(model_matrix_condor)]
+all_preds <- colnames(vls)
+
+# Check for each whether it is in the model equation
+preds_glm <- vector()
+for(i in all_preds){
+  fitted_model$condor$random$glm[i] <- grepl(i, as.character(fitted_model$condor$random$glm$formula)[3]) 
+}
+
+# Get subset of predictors for each species, which is stored locally
+used_preds_condor <- rast("C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\predictors_condor_new.tif")
+names(used_preds_condor)
+
+# Prepare raw prediction data set (200 replicates of medians for all predictors)
+predat_raw <- as.data.frame(env_stats[rep(2,200), all_preds])
+
+# Prepare plotting window
+par(mfrow=c(3,3), cex = 1, mar = c(4,4,1,1))
+
+# Loop over used predictors
+for (i in names(used_preds_condor)) {
+  
+  # Create data set for prediction
+  predat_i <- predat_raw
+  
+  # Create sequence for the variable of interest (min to max in 200 steps)
+  predat_i[, i] <- seq(env_stats[1, i], env_stats[3, i], length.out = 200)
+  
+  # Create plot frame for response curves of predictor i
+  plot(1, 1, ylim = c(0, 1), xlim = env_stats[c(1, 3), i], type = "n",
+       ylab = "Occurrence probability", xlab = i)
+  
+  # Predict condor
+  prd_condor_i <- predict(fitted_model$condor$random$glm, newdata = predat_i, type = "response", se.fit = TRUE)
+  
+  # Add polygon for standard error
+  polygon(c(predat_i[, i], rev(predat_i[, i]), predat_i[1, i]),
+          c(prd_condor_i$fit + prd_condor_i$se.fit, rev(prd_condor_i$fit - prd_condor_i$se.fit),
+            prd_condor_i$fit[1] + prd_condor_i$se.fit[1]),
+          col = "#e5f5f9", border = FALSE)
+  
+  # Add line for prediction
+  lines(predat_i[, i], prd_condor_i$fit, col = "#2ca25f")
+  
+  # Add observations
+  points(model_matrix_condor[, i], model_matrix_condor$Presence, pch = "I", col = "#00000050")
+  
+  # Redraw panel box
+  box()
+}
+
+
+### PUMA
+# Extract minima, maxima, and medians
+env_stats <- apply(env_predictors, 2, quantile, probs = c(0,.5,1), na.rm = TRUE) 
+round(env_stats, digits = 2)
+
+# First, you identify the predictors in the step GLM
+vls <- model_matrix_puma[, 5:ncol(model_matrix_puma)]
+all_preds <- colnames(vls)
+
+# Check for each whether it is in the model equation
+preds_glm <- vector()
+for(i in all_preds){
+  fitted_model$puma$strat$glm[i] <- grepl(i, as.character(fitted_model$puma$strat$glm$formula)[3]) 
+}
+
+# Get subset of predictors for each species, which is stored locally
+used_preds_puma <- rast("C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\predictors_puma_new.tif")
+names(used_preds_puma)
+
+# Prepare raw prediction data set (200 replicates of medians for all predictors)
+predat_raw <- as.data.frame(env_stats[rep(2,200), all_preds])
+
+# Prepare plotting window
+par(mfrow=c(3,3), cex = 1, mar = c(4,4,1,1))
+
+# Loop over used predictors
+for (i in names(used_preds_puma)) {
+  
+  # Create data set for prediction
+  predat_i <- predat_raw
+  
+  # Create sequence for the variable of interest (min to max in 200 steps)
+  predat_i[, i] <- seq(env_stats[1, i], env_stats[3, i], length.out = 200)
+  
+  # Create plot frame for response curves of predictor i
+  plot(1, 1, ylim = c(0, 1), xlim = env_stats[c(1, 3), i], type = "n",
+       ylab = "Occurrence probability", xlab = i)
+  
+  # Predict puma
+  prd_puma_i <- predict(fitted_model$puma$strat$glm, newdata = predat_i, type = "response", se.fit = TRUE)
+  
+  # Add polygon for standard error
+  polygon(c(predat_i[, i], rev(predat_i[, i]), predat_i[1, i]),
+          c(prd_puma_i$fit + prd_puma_i$se.fit, rev(prd_puma_i$fit - prd_puma_i$se.fit),
+            prd_puma_i$fit[1] + prd_puma_i$se.fit[1]),
+          col = "#e5f5f9", border = FALSE)
+  
+  # Add line for prediction
+  lines(predat_i[, i], prd_puma_i$fit, col = "#2ca25f")
+  
+  # Add observations
+  points(model_matrix_puma[, i], model_matrix_puma$Presence, pch = "I", col = "#00000050")
+  
+  # Redraw panel box
+  box()
+}
+
+
+### BEAR
+# Extract minima, maxima, and medians
+env_stats <- apply(env_predictors, 2, quantile, probs = c(0,.5,1), na.rm = TRUE) 
+round(env_stats, digits = 2)
+
+# First, you identify the predictors in the step GLM
+vls <- model_matrix_bear[, 5:ncol(model_matrix_bear)]
+all_preds <- colnames(vls)
+
+# Check for each whether it is in the model equation
+preds_glm <- vector()
+for(i in all_preds){
+  fitted_model$bear$strat$glm[i] <- grepl(i, as.character(fitted_model$bear$strat$glm$formula)[3]) 
+}
+
+# Get subset of predictors for each species, which is stored locally
+used_preds_bear <- rast("C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\predictors_bear_new.tif")
+names(used_preds_bear)
+
+# Prepare raw prediction data set (200 replicates of medians for all predictors)
+predat_raw <- as.data.frame(env_stats[rep(2,200), all_preds])
+
+# Prepare plotting window
+par(mfrow=c(3,3), cex = 1, mar = c(4,4,1,1))
+
+# Loop over used predictors
+for (i in names(used_preds_bear)) {
+  
+  # Create data set for prediction
+  predat_i <- predat_raw
+  
+  # Create sequence for the variable of interest (min to max in 200 steps)
+  predat_i[, i] <- seq(env_stats[1, i], env_stats[3, i], length.out = 200)
+  
+  # Create plot frame for response curves of predictor i
+  plot(1, 1, ylim = c(0, 1), xlim = env_stats[c(1, 3), i], type = "n",
+       ylab = "Occurrence probability", xlab = i)
+  
+  # Predict bear
+  prd_bear_i <- predict(fitted_model$bear$strat$glm, newdata = predat_i, type = "response", se.fit = TRUE)
+  
+  # Add polygon for standard error
+  polygon(c(predat_i[, i], rev(predat_i[, i]), predat_i[1, i]),
+          c(prd_bear_i$fit + prd_bear_i$se.fit, rev(prd_bear_i$fit - prd_bear_i$se.fit),
+            prd_bear_i$fit[1] + prd_bear_i$se.fit[1]),
+          col = "#e5f5f9", border = FALSE)
+  
+  # Add line for prediction
+  lines(predat_i[, i], prd_bear_i$fit, col = "#2ca25f")
+  
+  # Add observations
+  points(model_matrix_bear[, i], model_matrix_bear$Presence, pch = "I", col = "#00000050")
+  
+  # Redraw panel box
+  box()
+}
 ```
 
 The following chunk checks that all models contain the same amount of data per species.
@@ -1190,13 +1387,13 @@ The following chunk does the following:
 
     2.  Calculate thresholds and make confusion matrices
 
-    3.  Calculate threshold dependent validation (Cohen's Kappa & TSS). The following plots created:![](images/Kappa "Cohen's Kappa"){width="316"}![](images/TSS "TSS"){width="316"}
+    3.  Calculate threshold dependent validation (Cohen's Kappa & TSS). The following plots created:![](Visualizations/Kappa "Cohen's Kappa"){width="316"}![](Visualizations/TSS "TSS"){width="316"}
 
     4.  Calculate threshold independent validation (ROC, AUC & Boyce). The following plots created:
 
-        ![](images/ROC "ROC"){width="316"}![](images/AUC "AUC"){width="316"}
+        ![](Visualizations/ROC "ROC"){width="316"}![](Visualizations/AUC "AUC"){width="316"}
 
-        ![](images/Boyce "Boyce"){width="316"}![](images/Boyce%20Index "Boyce Index"){width="316"}
+        ![](Visualizations/Boyce "Boyce"){width="316"}![](Visualizations/Boyce%20Index "Boyce Index"){width="316"}
 
 2.  The results of the model validation were used for the spatial projection. For all species, the GBM models were best and RF were second best. For the condor, the random pseudo-absences got the best scores, while the puma & bear had the best results for the environmental stratified pseudo-absences.
 
@@ -1358,7 +1555,7 @@ names(cv_thres_list) <- c("condor", "puma", "bear")
 cv_thres_unlist_c <- unlist(cv_thres_list$condor, recursive = F)
 
 # store for projections
-save(cv_thres_list, file="C:/Users/justi/OneDrive/Studium/Umweltnaturwissenschaften/Landscape Modelling/Condor/Condor-Landscape-Modelling/cv_thres_list.rda")
+save(cv_thres_list, file='Rasters/cv_thres_list.rda')
 
 # Confusion Matrix
 
