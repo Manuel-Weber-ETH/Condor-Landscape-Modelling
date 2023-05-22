@@ -28,7 +28,7 @@ Weekly meetings on Tuesdays at 4:15 PM on the green floor in CHN or in F77 (no m
 Summarize and email questions to Monika before the meetings.
 
 | Date        | Progress Milestone                                                                         | Suggested Focus                                                      |
-|--------------|---------------------------------|-------------------------|
+|-----------------|-------------------------------|------------------------|
 | 03.04-07.04 | Species occurrence data downloaded and cleaned                                             | Data retrieval and cleaning                                          |
 | 10.04-14.05 | Environmental data prepared for model fitting                                              | Environmental exploration                                            |
 | 17.04-21.04 | 1.Initial set of predictors selected 2.Created 1st set of PAs (e.g.: random)               | Environmental predictors ; Pseudoabsence creation (PAs)              |
@@ -584,9 +584,9 @@ We then cropped all layers to the study area, reprojected them to the DEM raster
 install.packages("sf")
 library(sf)
 
-lakes <- read_sf("Hydro_LAKES/Hydro_LAKES/sa_lakes.shp")%>% ### CHANGE PATH
+lakes <- read_sf("DRIVE/Hydro_LAKES/Hydro_LAKES/sa_lakes.shp")%>% ### CHANGE PATH
   st_transform(st_crs(area))
-rivers <- read_sf("Hydro_RIVERS/HydroRIVERS_v10_sa.shp")%>% ### CHANGE PATH
+rivers <- read_sf("DRIVE/Hydro_RIVERS/HydroRIVERS_v10_sa.shp")%>% ### CHANGE PATH
   st_transform(st_crs(area))
 
 #only use big rivers & lakes
@@ -604,7 +604,7 @@ plot(rivers_crop, add=T)
 water <- st_union(lakes_crop, rivers_crop) #merge lakes & rivers
 
 #merged Raster by Monika because it took too long on my computer
-water<-rast("sa_water_1km_aea.tif") ### CHANGE PATH
+water<-rast("DRIVE/sa_water_1km_aea.tif") ### CHANGE PATH
 plot(water, col='lightblue')
 
 #focal
@@ -964,7 +964,7 @@ GBM: Gradient boosting machine is an ensemble algorithm that fits boosted decisi
 The models are stored in a list in the repository ("fitted_models.rds").
 
 ```{r}
-setwd("Project") ### CHANGE PATH
+setwd("Condor-Landscape-Modelling/") ### CHANGE PATH
 library(terra)
 # Reading in presence data
 condor <- read.csv("Condor-Landscape-Modelling/Occurrence data/condor_presences_1km.csv")
@@ -2436,12 +2436,12 @@ write.csv(data, "bear_epsg4326_polygon.csv")
 
 ### Please set the working directory
 
-setwd("Project/Polygon approach") ### CHANGE PATH
+setwd("Condor-Landscape-Modelling/Polygon-based approach") ### CHANGE PATH
 
 ### Please set the folder with the occurrence data.
 ### Data should be in .csv format (or any format delimited by ","),
 ### with two columns "x" and "y" to give the longitude and latitude of occurrences
-input_dir <- "Project/Polygon approach"  ### CHANGE PATH
+input_dir <- "Condor-Landscape-Modelling/Polygon-based approach"  ### CHANGE PATH
 
 # Please load polygon mapping functions from where you save these scripts
 source("./range_fun.R")
@@ -2557,7 +2557,7 @@ cat(paste0("Polygon maps are saved in the folder: \n",  getwd(), "/",dest_output
 **Chunk 3: 16 large mammal species**
 
 ```{r}
-setwd("Project/Polygon approach") ### CHANGE PATH
+setwd("Condor-Landscape-Modelling/Polygon-based approach") ### CHANGE PATH
 
 species <- read.csv("large_mammals.csv")
 
@@ -2578,7 +2578,7 @@ for(i in 1:length(species$Species.name)){
 
 # Mazama bricenii (Thomas, 1908) has no recent occurrences
 
-setwd("Project/Polygon approach") ### CHANGE PATH
+setwd("Condor-Landscape-Modelling/Polygon-based approach") ### CHANGE PATH
 
 for(i in 1:length(list.files("Species occurrences/"))){
   data <- read.csv(paste0("Species occurrences/", list.files("Species occurrences/")[i]))
@@ -2594,7 +2594,7 @@ library(sf)
 library(CoordinateCleaner)
 library(raster)
 
-input_dir <- "Project/Polygon approach"  ### CHANGE PATH
+input_dir <- "Condor-Landscape-Modelling/Polygon-based approach"  ### CHANGE PATH
 
 source("./range_fun.R")
 
