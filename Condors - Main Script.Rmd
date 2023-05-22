@@ -360,7 +360,7 @@ write.csv(rnd, "Pseudo absences/pseudo absences stratified elevation.csv")
 ## We'll use the MAT and MAP as stratifiers
 
 library(terra)
-setwd("C:/Users/mwebe/Downloads")
+setwd("DRIVE") ### CHANGE PATH
 t <- rast("temp_mean.tif")
 plot(t)
 tx <- minmax(t)
@@ -379,7 +379,7 @@ r <- mean(tn,pn)
 plot(r)
 rm(tn,pn,px,tx)
 
-setwd("C:/0_Documents/10_ETH/12_Mon 13-16_CHN E42_Landscape Modelling of Biodiversity/Project/Condor-Landscape-Modelling")
+setwd("Condor-Landscape-Modelling") ### CHANGE PATH
 library(sf)
 area <- read_sf("Study area shapefile/study area shapefile.shp")
 area <- area[1]
@@ -580,9 +580,9 @@ We then cropped all layers to the study area, reprojected them to the DEM raster
 install.packages("sf")
 library(sf)
 
-lakes <- read_sf("C:/Users/justi/OneDrive/Studium/Umweltnaturwissenschaften/Landscape Modelling/Condor/download polybox/Hydro_LAKES/Hydro_LAKES/sa_lakes.shp")%>%
+lakes <- read_sf("Hydro_LAKES/Hydro_LAKES/sa_lakes.shp")%>% ### CHANGE PATH
   st_transform(st_crs(area))
-rivers <- read_sf("C:/Users/justi/OneDrive/Studium/Umweltnaturwissenschaften/Landscape Modelling/Condor/download polybox/Hydro_RIVERS/HydroRIVERS_v10_sa.shp")%>%
+rivers <- read_sf("Hydro_RIVERS/HydroRIVERS_v10_sa.shp")%>% ### CHANGE PATH
   st_transform(st_crs(area))
 
 #only use big rivers & lakes
@@ -600,7 +600,7 @@ plot(rivers_crop, add=T)
 water <- st_union(lakes_crop, rivers_crop) #merge lakes & rivers
 
 #merged Raster by Monika because it took too long on my computer
-water<-rast("C://Users//justi//OneDrive//Studium//Umweltnaturwissenschaften//Landscape Modelling//Condor//download polybox//sa_water_1km_aea.tif")
+water<-rast("sa_water_1km_aea.tif") ### CHANGE PATH
 plot(water, col='lightblue')
 
 #focal
@@ -609,25 +609,25 @@ water[is.na(water)] <- 0
 water_focal<-focal(water, w=matrix(1, nc=3, nr=3))
 plot(water_focal)
 
-Because of the size of the raster, it is stored locally and uploaded in a shared google drive.
-writeRaster(water_focal, "C:/Users/justi/OneDrive/Studium/Umweltnaturwissenschaften/Landscape Modelling/Condor/Raster drive/water_focal.tif", overwrite=TRUE)
+#Because of the size of the raster, it is stored locally and uploaded in a shared google drive.
+writeRaster(water_focal, "water_focal.tif", overwrite=TRUE)
 
 
-### Read in the data for all predictors
+### Read in the data for all predictors  ### CHANGE PATH
 ## DEM
 dem <- rast("Rasters/DEM.tif")
 ## Mean annual air temperature (bio1)
-temp_mean_annual <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio1_1981-2010_V.2.1.tif')
+temp_mean_annual <- rast('CHELSA_bio1_1981-2010_V.2.1.tif')
 ## Mean diurnal air temperature range (bio2)
-temp_mean_diurnal <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio2_1981-2010_V.2.1.tif')
+temp_mean_diurnal <- rast('CHELSA_bio2_1981-2010_V.2.1.tif')
 ## Annual range of air temperature (bio7)
-temp_range <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio7_1981-2010_V.2.1.tif')
+temp_range <- rast('CHELSA_bio7_1981-2010_V.2.1.tif')
 ## Annual Precipitation amount (bio12)
-prec_annual <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio12_1981-2010_V.2.1.tif')
+prec_annual <- rast('CHELSA_bio12_1981-2010_V.2.1.tif')
 ## Precipitation amount of the wettest month (bio13)
-prec_wettest_month <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio13_1981-2010_V.2.1.tif')
+prec_wettest_month <- rast('CHELSA_bio13_1981-2010_V.2.1.tif')
 ## Precipitation amount of the driest month (bio14)
-prec_driest_month <- rast('C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\CHELSA_bio14_1981-2010_V.2.1.tif')
+prec_driest_month <- rast('CHELSA_bio14_1981-2010_V.2.1.tif')
 ## Tree cover
 tree_cover <- rast("Rasters\\tree_cover.tif")
 ## Canopy height
@@ -684,7 +684,7 @@ writeRaster(prec_driest_month, 'precipitation_driest_month.tif')
 library(viridisLite)
 
 # Load environmental predictors
-predictors <- rast("C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\Project\\predictors.tif")
+predictors <- rast("predictors.tif") ### CHANGE PATH
 
 # Plot predictors to get an overview
 plot(predictors, col = viridis(1e3), axes = FALSE, main = c('DEM', 'Temperature Mean Annual', 'Temperature Mean Diurnal', 'Temperature Range', 'Precipitation Annual', 'Precipitation Wettest Month', 'Precipitation Driest Month', 'Tree Cover', 'Canopy Height', 'Population Density', 'Aspect', 'Slope', 'Water Bodies'))
@@ -960,7 +960,7 @@ GBM: Gradient boosting machine is an ensemble algorithm that fits boosted decisi
 The models are stored in a list in the repository ("fitted_models.rds").
 
 ```{r}
-setwd("C:/0_Documents/10_ETH/12_Mon 13-16_CHN E42_Landscape Modelling of Biodiversity/Project")
+setwd("Project") ### CHANGE PATH
 library(terra)
 # Reading in presence data
 condor <- read.csv("Condor-Landscape-Modelling/Occurrence data/condor_presences_1km.csv")
@@ -1143,12 +1143,12 @@ saveRDS(modli, file = "~Rasters/fitted_models.rds")
 
 #### Generating response curves
 # Load fitted models
-fitted_model <- readRDS("C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\fitted_models.rds")
+fitted_model <- readRDS("fitted_models.rds") ### CHANGE PATH
 summary(fitted_models)
 
 # Load predictors
 library('terra')
-predictors <- rast("C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\predictors.tif")
+predictors <- rast("predictors.tif") ### CHANGE PATH
 env_predictors <- values(predictors)
 
 
@@ -1168,7 +1168,7 @@ for(i in all_preds){
 }
 
 # Get subset of predictors for each species, which is stored locally
-used_preds_condor <- rast("C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\predictors_condor_new.tif")
+used_preds_condor <- rast("predictors_condor_new.tif") ### CHANGE PATH
 names(used_preds_condor)
 
 # Prepare raw prediction data set (200 replicates of medians for all predictors)
@@ -1226,7 +1226,7 @@ for(i in all_preds){
 }
 
 # Get subset of predictors for each species, which is stored locally
-used_preds_puma <- rast("C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\predictors_puma_new.tif")
+used_preds_puma <- rast("predictors_puma_new.tif") ### CHANGE PATH
 names(used_preds_puma)
 
 # Prepare raw prediction data set (200 replicates of medians for all predictors)
@@ -1284,7 +1284,7 @@ for(i in all_preds){
 }
 
 # Get subset of predictors for each species, which is stored locally
-used_preds_bear <- rast("C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\predictors_bear_new.tif")
+used_preds_bear <- rast("predictors_bear_new.tif") ### CHANGE PATH
 names(used_preds_bear)
 
 # Prepare raw prediction data set (200 replicates of medians for all predictors)
@@ -1399,7 +1399,7 @@ library(ranger)
 ##Model validation
 
 #load models
-fitted_model<-readRDS("C:/Users/justi/OneDrive/Studium/Umweltnaturwissenschaften/Landscape Modelling/Condor/Condor-Landscape-Modelling/fitted_models.rds")
+fitted_model<-readRDS("Condor-Landscape-Modelling/fitted_models.rds") ### CHANGE PATH
 
 # Subset lists for the species and flatten them 
 condor_fit_models <- unlist(fitted_model$condor, recursive = FALSE) 
@@ -1771,11 +1771,11 @@ legend("topright",legend = lgna,
 
 ##### Condor
 ### Load predictors for condor
-predictors_condor <- rast("C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\predictors_condor_new.tif")
+predictors_condor <- rast("predictors_condor_new.tif") ### CHANGE PATH
 
 ### Load fitted models
 # Load all fitted models
-fitted_model <- readRDS("C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\fitted_models.rds")
+fitted_model <- readRDS("fitted_models.rds") ### CHANGE PATH
 summary(fitted_models)
 # Load fitted models for condor
 condor_fit_models <- unlist(fitted_model$condor, recursive = FALSE)
@@ -1824,11 +1824,11 @@ plot(stk_cur_prob, bty = "n",axes = F, range = c(0,1), col = cls, cex = 1,
 
 ##### Puma
 ### Load predictors for puma
-predictors_puma <- rast("C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\predictors_puma_new.tif")
+predictors_puma <- rast("predictors_puma_new.tif") ### CHANGE PATH
 
 ### Load fitted models
 # Load all fitted models
-fitted_models <- readRDS("C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\fitted_models.rds")
+fitted_models <- readRDS("fitted_models.rds") ### CHANGE PATH
 summary(fitted_models)
 # Load fitted models for puma
 puma_fit_models <- unlist(fitted_model$puma, recursive = FALSE)
@@ -1877,11 +1877,11 @@ plot(stk_cur_prob, bty = "n",axes = F, range = c(0,1), col = cls, cex = 1,
 
 ##### Bear
 ### Load predictors for bear
-predictors_bear <- rast("C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\predictors_bear_new.tif")
+predictors_bear <- rast("predictors_bear_new.tif") ### CHANGE PATH
 
 ### Load fitted models
 # Load all fitted models
-fitted_models <- readRDS("C:\\Users\\tanja\\OneDrive\\Dokumente\\UZH FS_23\\Landscape Modelling\\fitted_models.rds")
+fitted_models <- readRDS("fitted_models.rds") ### CHANGE PATH
 summary(fitted_models)
 # Load fitted models for bear
 bear_fit_models <- unlist(fitted_model$bear, recursive = FALSE)
@@ -1936,13 +1936,13 @@ kappa <- data.frame(condor = c(cv_thres_list$condor$random.rf[4], cv_thres_list$
                     puma = c(cv_thres_list$puma$strat.rf[4], cv_thres_list$puma$strat.gbm[4]),
                     bear = c(cv_thres_list$bear$strat.rf[4], cv_thres_list$bear$strat.gbm[4]))
 
-setwd("C:/Users/mwebe/Downloads")
+setwd("DRIVE") ### CHANGE PATH
 library(terra)
 library(sf)
-area <- read_sf("shapefiles/study area shapefile.shp")[1]
+area <- read_sf("shapefiles/study area shapefile.shp")[1]  ### CHANGE PATH
 
 ### Condor
-condor <- rast("Condor random gbm and random rf.tif")
+condor <- rast("Condor random gbm and random rf.tif")  ### CHANGE PATH
 
 condor <- mask(crop(condor, area), area)
 names(condor) <- c("gbm", "rf")
@@ -2396,7 +2396,7 @@ if(nrow(occ_coord_mod)==0){
 
 ```{r}
 
-setwd("C:/0_Documents/10_ETH/12_Mon 13-16_CHN E42_Landscape Modelling of Biodiversity/Project/Condor-Landscape-Modelling/Occurrence data")
+setwd("Condor-Landscape-Modelling/Occurrence data") ### CHANGE PATH
 
 library(terra)
 library(sf)
@@ -2432,12 +2432,12 @@ write.csv(data, "bear_epsg4326_polygon.csv")
 
 ### Please set the working directory
 
-setwd("C:/0_Documents/10_ETH/12_Mon 13-16_CHN E42_Landscape Modelling of Biodiversity/Project/Polygon approach")
+setwd("Project/Polygon approach") ### CHANGE PATH
 
 ### Please set the folder with the occurrence data.
 ### Data should be in .csv format (or any format delimited by ","),
 ### with two columns "x" and "y" to give the longitude and latitude of occurrences
-input_dir <- "C:/0_Documents/10_ETH/12_Mon 13-16_CHN E42_Landscape Modelling of Biodiversity/Project/Polygon approach"
+input_dir <- "Project/Polygon approach"  ### CHANGE PATH
 
 # Please load polygon mapping functions from where you save these scripts
 source("./range_fun.R")
@@ -2553,7 +2553,7 @@ cat(paste0("Polygon maps are saved in the folder: \n",  getwd(), "/",dest_output
 **Chunk 3: 16 large mammal species**
 
 ```{r}
-setwd("C:/0_Documents/10_ETH/12_Mon 13-16_CHN E42_Landscape Modelling of Biodiversity/Project/Polygon approach")
+setwd("Project/Polygon approach") ### CHANGE PATH
 
 species <- read.csv("large_mammals.csv")
 
@@ -2574,7 +2574,7 @@ for(i in 1:length(species$Species.name)){
 
 # Mazama bricenii (Thomas, 1908) has no recent occurrences
 
-setwd("C:/0_Documents/10_ETH/12_Mon 13-16_CHN E42_Landscape Modelling of Biodiversity/Project/Polygon approach")
+setwd("Project/Polygon approach") ### CHANGE PATH
 
 for(i in 1:length(list.files("Species occurrences/"))){
   data <- read.csv(paste0("Species occurrences/", list.files("Species occurrences/")[i]))
@@ -2590,7 +2590,7 @@ library(sf)
 library(CoordinateCleaner)
 library(raster)
 
-input_dir <- "C:/0_Documents/10_ETH/12_Mon 13-16_CHN E42_Landscape Modelling of Biodiversity/Project/Polygon approach"
+input_dir <- "Project/Polygon approach"  ### CHANGE PATH
 
 source("./range_fun.R")
 
