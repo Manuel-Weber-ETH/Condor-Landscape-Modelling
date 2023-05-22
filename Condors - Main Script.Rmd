@@ -17,6 +17,10 @@ Students: Justine De Groote, Tanja Falasca, Manuel Weber
 
 Supervisor: Monika K. Goralczyk
 
+**To run the script, paths need to be adapted to where the data is stored. Relevant lines are marked with "\### CHANGE PATH".**
+
+Most data has been run through the repository (<https://github.com/Manuel-Weber-ETH/Condor-Landscape-Modelling.git>), however when heavy rasters were involved, they were loaded from google drive (<https://drive.google.com/drive/folders/1RhKo5il5ji5PHPXgBQtaA75J20gKIQif>) or the local machine.
+
 ## Organization
 
 Weekly meetings on Tuesdays at 4:15 PM on the green floor in CHN or in F77 (no meeting on the 11th of April).
@@ -2620,7 +2624,7 @@ for (p in packages) {
 ### Please set the names for output maps for each species, and the length should be the same with input occurrence .csv files
 ### If this is not set, the names would be the same with the input files.
 
-species_name <- NA # (optional)
+species_name <- NA
 
 ### Default parameter settings:
 
@@ -2749,6 +2753,7 @@ writeOGR(colombia_albers, "Study area shapefile/", layer = "Colombia_ESRI_102033
 cropped_raster <- crop(raster, colombia_albers)
 cropped_raster <- mask(cropped_raster, colombia_albers)
 
-#### From here, the work has been transferred to QGIS
+
+#### From here, the work has been transferred to QGIS 3
 
 ```
